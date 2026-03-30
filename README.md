@@ -29,7 +29,7 @@
 ### Online (GitHub Pages)
 Aplikacija je dostupna na:
 ```
-https://<tvoje-korisnicko-ime>.github.io/kasica/
+https://milan12t.github.io/kasica/
 ```
 
 ### Lokalno
