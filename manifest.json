@@ -2,7 +2,7 @@
   "name": "Kasica — Budget App",
   "short_name": "Kasica",
   "description": "Pametno upravljanje novcem",
-  "start_url": "/index.html",
+  "start_url": "kasica/index.html",
   "display": "standalone",
   "background_color": "#3a7d5a",
   "theme_color": "#3a7d5a",
