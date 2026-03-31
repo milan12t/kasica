@@ -2,9 +2,9 @@
 const STATE = {
   currentScreen: 'home',
   prevScreen: null,
-  mainTab: 'expenses',   // expenses | income
-  txTab: 'expenses',
-  opsTab: 'expenses',
+  mainTab: 'expense',
+  txTab: 'expense',
+  opsTab: 'expense',
   period: 'day',
   opsPeriod: 'week',
   periodOffset: 0,
@@ -48,16 +48,45 @@ const ICON_LIST = ['🛒','🍽️','🏠','🏛️','❤️','❓','➕','🚌'
 const COLORS = ['#e74c3c','#27ae60','#4a90d9','#f5a623','#e91e63','#8bc34a','#00bcd4','#9b59b6','#ff5722','#607d8b'];
 
 function load() {
-  return {
-    categories: JSON.parse(localStorage.getItem('kasica_cats') || 'null') || DEFAULT_CATS,
-    transactions: JSON.parse(localStorage.getItem('kasica_tx') || 'null') || SAMPLE_TX,
-    balance: parseFloat(localStorage.getItem('kasica_balance') || '2845'),
-  };
+  let categories = DEFAULT_CATS;
+  let transactions = SAMPLE_TX;
+  let balance = 2845;
+
+  try {
+    const rawCats = localStorage.getItem('kasica_cats');
+    if (rawCats) {
+      const parsed = JSON.parse(rawCats);
+      if (Array.isArray(parsed) && parsed.length > 0) categories = parsed;
+    }
+  } catch(e) {}
+
+  try {
+    const rawTx = localStorage.getItem('kasica_tx');
+    if (rawTx) {
+      const parsed = JSON.parse(rawTx);
+      if (Array.isArray(parsed)) transactions = parsed;
+    }
+  } catch(e) {}
+
+  try {
+    const rawBal = localStorage.getItem('kasica_balance');
+    if (rawBal !== null) {
+      const parsed = parseFloat(rawBal);
+      if (!isNaN(parsed)) balance = parsed;
+    }
+  } catch(e) {}
+
+  return { categories, transactions, balance };
 }
+
 function save(data) {
-  localStorage.setItem('kasica_cats', JSON.stringify(data.categories));
-  localStorage.setItem('kasica_tx', JSON.stringify(data.transactions));
-  localStorage.setItem('kasica_balance', data.balance.toString());
+  try {
+    localStorage.setItem('kasica_cats', JSON.stringify(data.categories));
+    localStorage.setItem('kasica_tx', JSON.stringify(data.transactions));
+    localStorage.setItem('kasica_balance', String(data.balance));
+  } catch(e) {
+    alert('Greška pri čuvanju podataka: ' + e.message);
+  }
 }
 
 let DB = load();
@@ -365,7 +394,7 @@ function addTransaction() {
     type: STATE.txTab,
   };
   DB.transactions.push(newTx);
-  if (STATE.txTab === 'expenses') DB.balance -= amount;
+  if (STATE.txTab === 'expense') DB.balance -= amount;
   else DB.balance += amount;
   save(DB);
   navigate('home');
@@ -425,7 +454,7 @@ function deleteTx(id) {
   if (!confirm('Obrisati ovu transakciju?')) return;
   const tx = DB.transactions.find(t => t.id === id);
   if (tx) {
-    if (tx.type === 'expenses') DB.balance += tx.amount;
+    if (tx.type === 'expense') DB.balance += tx.amount;
     else DB.balance -= tx.amount;
     DB.transactions = DB.transactions.filter(t => t.id !== id);
     save(DB);
