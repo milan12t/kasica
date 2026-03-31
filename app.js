@@ -317,7 +317,7 @@ function renderHomeList() {
     if (!sum) return;
     const pct = Math.round(sum / total * 100);
     html += `
-      <div class="cat-item" onclick="navigate('operations')">
+      <div class="cat-item" onclick="openOpsForTab('${STATE.mainTab}')">
         <div class="cat-icon-circle" style="background:${cat.color}20;color:${cat.color}">
           <span style="font-size:20px">${cat.icon}</span>
         </div>
@@ -368,6 +368,16 @@ function drawDonut() {
   });
 
   document.getElementById('donut-total').textContent = fmt(total, STATE.baseCurrency);
+}
+
+function openOpsForTab(tab) {
+  STATE.opsTab = tab;
+  navigate('operations');
+  // sinhronizuj tab dugmad nakon navigate
+  document.querySelectorAll('#screen-operations .tabs .tab').forEach((b, i) => {
+    b.classList.toggle('active', (i === 0 && tab === 'expense') || (i === 1 && tab === 'income'));
+  });
+  renderOpsList();
 }
 
 function editBalance() {
@@ -516,6 +526,7 @@ function switchOpsTab(tab, btn) {
 
 function renderOpsList() {
   const el     = document.getElementById('ops-list');
+  // prikazuje SVE transakcije za dati tab, bez filtera po periodu
   const txList = DB.transactions
     .filter(t => t.type === STATE.opsTab)
     .sort((a, b) => b.date.localeCompare(a.date));
@@ -537,7 +548,7 @@ function renderOpsList() {
     html += `<div class="ops-date-group">${d.toLocaleDateString('sr-RS', { day:'numeric', month:'long', year:'numeric' })}</div>`;
     byDate[date].forEach(tx => {
       const cat = DB.categories.find(c => c.id === tx.catId) || { name:'Ostalo', icon:'❓', color:'#95a5a6' };
-      const sym = CURRENCY_SYMBOLS[tx.currency] || tx.currency || '$';
+      const sym = CURRENCY_SYMBOLS[tx.currency] || tx.currency || '€';
       html += `
         <div class="ops-tx-item" onclick="deleteTx(${tx.id})">
           <div class="cat-icon-circle" style="background:${cat.color}20;color:${cat.color};width:40px;height:40px">
