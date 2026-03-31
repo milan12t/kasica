@@ -350,3 +350,32 @@ body.dark {
 
 /* ===== HOME CONTENT SCROLL ===== */
 .home-content { overflow-y: auto; flex: 1; padding-bottom: 80px; }
+
+/* ===== NOVI ELEMENTI ===== */
+.acc-icon-opt {
+  font-size: 28px; padding: 8px; border-radius: 12px;
+  cursor: pointer; border: 3px solid transparent;
+  transition: all 0.15s;
+}
+.acc-icon-opt.selected {
+  border-color: var(--green); background: var(--green)15;
+}
+
+.freq-btn {
+  padding: 8px 16px; border-radius: 20px;
+  border: 2px solid var(--border); background: none;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  font-family: 'Nunito', sans-serif; color: var(--text-muted);
+  transition: all 0.2s;
+}
+.freq-btn.active {
+  background: var(--green); border-color: var(--green);
+  color: white;
+}
+
+.account-card {
+  background: var(--card); border-radius: 16px;
+  padding: 16px; margin: 0 12px 10px;
+  box-shadow: var(--shadow);
+  display: flex; align-items: center; gap: 12px;
+}

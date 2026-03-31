@@ -141,6 +141,11 @@ function navigate(screen) {
   if (screen === 'new-category')    initNewCatScreen();
   if (screen === 'charts')          initCharts();
   if (screen === 'accounts')        initAccounts();
+  if (screen === 'new-account')     { selectedAccIcon = '💵'; }
+  if (screen === 'regular')         initRegular();
+  if (screen === 'new-regular')     initNewRegular();
+  if (screen === 'reminders')       initReminders();
+  if (screen === 'new-reminder')    initNewReminder();
   if (screen === 'settings')        initSettings();
 }
 
@@ -757,4 +762,328 @@ function exportData() {
   a.href = URL.createObjectURL(blob);
   a.download = 'kasica-export.json';
   a.click();
+}
+
+// ============================================================
+// RAČUNI — sa brisanjem i uređivanjem
+// ============================================================
+let selectedAccIcon = '💵';
+
+function selectAccIcon(el, icon) {
+  selectedAccIcon = icon;
+  document.querySelectorAll('.acc-icon-opt').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function getAccounts() {
+  const raw = lsGet('k_accounts');
+  if (raw) { try { const p = JSON.parse(raw); if (Array.isArray(p)) return p; } catch(e) {} }
+  return [
+    { id: 1, name: 'Gotovina', balance: 2845, currency: 'USD', icon: '💵' },
+    { id: 2, name: 'Banka',    balance: 5200, currency: 'RSD', icon: '🏦' },
+  ];
+}
+function saveAccounts(accounts) {
+  lsSet('k_accounts', JSON.stringify(accounts));
+}
+
+function initAccounts() {
+  const accounts = getAccounts();
+  const el = document.getElementById('accounts-content');
+  if (!el) return;
+
+  if (!accounts.length) {
+    el.innerHTML = `
+      <div style="text-align:center;padding:60px 20px;color:var(--text-muted)">
+        <div style="font-size:48px;margin-bottom:12px">💰</div>
+        <p style="font-size:15px;font-weight:600">Nema računa</p>
+        <p style="font-size:13px;margin-top:6px">Dodaj novi računom pritiskom na +</p>
+      </div>`;
+    return;
+  }
+
+  const totalUSD = accounts.reduce((a, acc) => {
+    const rates = { USD:1, EUR:1.09, GBP:1.27, RSD:0.0093 };
+    return a + acc.balance * (rates[acc.currency] || 1);
+  }, 0);
+
+  el.innerHTML = `
+    <div style="background:var(--green);margin:12px;border-radius:16px;padding:20px;color:white;text-align:center">
+      <div style="font-size:12px;opacity:0.8;font-weight:600;letter-spacing:1px">UKUPNO (≈ USD)</div>
+      <div style="font-size:28px;font-weight:900;margin-top:4px">${Math.round(totalUSD).toLocaleString('sr-RS')} $</div>
+    </div>
+    ${accounts.map(a => `
+      <div class="account-card">
+        <div style="display:flex;align-items:center;gap:14px;flex:1">
+          <div style="width:48px;height:48px;border-radius:50%;background:var(--green)20;display:flex;align-items:center;justify-content:center;font-size:22px">${a.icon}</div>
+          <div>
+            <div class="account-name">${a.name}</div>
+            <div class="account-balance">${fmt(a.balance, a.currency)}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="editAccount(${a.id})" style="background:var(--green)20;border:none;border-radius:10px;padding:8px 12px;cursor:pointer;font-size:16px">✏️</button>
+          <button onclick="deleteAccount(${a.id})" style="background:#e74c3c20;border:none;border-radius:10px;padding:8px 12px;cursor:pointer;font-size:16px">🗑️</button>
+        </div>
+      </div>`).join('')}`;
+}
+
+function deleteAccount(id) {
+  if (!confirm('Obrisati ovaj račun?')) return;
+  const accounts = getAccounts().filter(a => a.id !== id);
+  saveAccounts(accounts);
+  initAccounts();
+}
+
+function editAccount(id) {
+  const accounts = getAccounts();
+  const acc = accounts.find(a => a.id === id);
+  if (!acc) return;
+  const newBalance = prompt(`Novi balans za "${acc.name}":`, acc.balance);
+  if (newBalance === null) return;
+  const num = parseFloat(newBalance);
+  if (isNaN(num)) { alert('Neispravan iznos'); return; }
+  acc.balance = num;
+  saveAccounts(accounts);
+  initAccounts();
+}
+
+function saveAccount() {
+  const name    = document.getElementById('acc-name').value.trim();
+  const balance = parseFloat(document.getElementById('acc-balance').value) || 0;
+  const currency = document.getElementById('acc-currency').value;
+  if (!name) { alert('Unesite naziv računa!'); return; }
+  const accounts = getAccounts();
+  accounts.push({ id: Date.now(), name, balance, currency, icon: selectedAccIcon });
+  saveAccounts(accounts);
+  navigate('accounts');
+}
+
+// ============================================================
+// REDOVNA PLAĆANJA
+// ============================================================
+let selectedRegCatId = null;
+let selectedRegFreq  = 'monthly';
+
+function getRegulars() {
+  const raw = lsGet('k_regulars');
+  if (raw) { try { const p = JSON.parse(raw); if (Array.isArray(p)) return p; } catch(e) {} }
+  return [];
+}
+function saveRegulars(data) { lsSet('k_regulars', JSON.stringify(data)); }
+
+const FREQ_LABELS = { daily:'Dnevno', weekly:'Nedeljno', monthly:'Mesečno', yearly:'Godišnje' };
+
+function initRegular() {
+  const list = getRegulars();
+  const el   = document.getElementById('regular-list');
+  if (!el) return;
+
+  if (!list.length) {
+    el.innerHTML = `
+      <div style="text-align:center;padding:60px 20px;color:var(--text-muted)">
+        <div style="font-size:48px;margin-bottom:12px">🔄</div>
+        <p style="font-size:15px;font-weight:700">Nema redovnih plaćanja</p>
+        <p style="font-size:13px;margin-top:6px">Dodaj kiriju, pretplate, rate...</p>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = list.map(r => {
+    const cat = DB.categories.find(c => c.id === r.catId) || { icon:'❓', color:'#95a5a6', name:'Ostalo' };
+    const sym = CURRENCY_SYMBOLS[r.currency] || r.currency;
+    const nextD = new Date(r.nextDate + 'T12:00:00');
+    const today = new Date(); today.setHours(0,0,0,0);
+    const diff  = Math.round((nextD - today) / 86400000);
+    const diffLabel = diff === 0 ? '⚠️ Danas!' : diff < 0 ? `⚠️ Kasni ${Math.abs(diff)} dana` : `Za ${diff} dana`;
+    const diffColor = diff <= 3 ? '#e74c3c' : '#7a9080';
+
+    return `
+      <div class="cat-item" style="margin-bottom:10px">
+        <div class="cat-icon-circle" style="background:${cat.color}20;color:${cat.color}">
+          <span style="font-size:20px">${cat.icon}</span>
+        </div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:15px">${r.name}</div>
+          <div style="font-size:12px;color:${diffColor};font-weight:600;margin-top:2px">${diffLabel} · ${FREQ_LABELS[r.freq]}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-weight:800;font-size:15px;color:var(--green)">${r.amount} ${sym}</div>
+          <button onclick="deleteRegular(${r.id})" style="background:none;border:none;cursor:pointer;color:#e74c3c;font-size:18px;padding:4px">🗑️</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function deleteRegular(id) {
+  if (!confirm('Obrisati ovo plaćanje?')) return;
+  saveRegulars(getRegulars().filter(r => r.id !== id));
+  initRegular();
+}
+
+function initNewRegular() {
+  selectedRegCatId = null;
+  selectedRegFreq  = 'monthly';
+  document.getElementById('reg-name').value    = '';
+  document.getElementById('reg-amount').value  = '';
+  document.querySelectorAll('.freq-btn').forEach((b, i) => b.classList.toggle('active', i === 2));
+  const d = new Date(); d.setDate(d.getDate() + 30);
+  setRegDate(d);
+  renderRegCatGrid();
+}
+
+function renderRegCatGrid() {
+  const el   = document.getElementById('reg-cat-grid');
+  if (!el) return;
+  const cats = DB.categories.filter(c => c.type === 'expense');
+  el.innerHTML = cats.map(cat => {
+    const sel = selectedRegCatId === cat.id;
+    return `<div class="cat-grid-item ${sel?'selected':''}" onclick="selectedRegCatId=${cat.id};renderRegCatGrid()">
+      <div class="cgi-circle" style="background:${sel?cat.color:'#c5d4cc'}">
+        <span style="font-size:20px">${cat.icon}</span>
+      </div>
+      <span style="font-size:11px;font-weight:600;color:${sel?cat.color:'var(--text-muted)'}">${cat.name}</span>
+    </div>`;
+  }).join('');
+}
+
+function selectFreq(btn, freq) {
+  selectedRegFreq = freq;
+  document.querySelectorAll('#screen-new-regular .freq-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setRegDate(d) {
+  const el = document.getElementById('reg-date-display');
+  if (!el) return;
+  el.textContent  = d.toLocaleDateString('sr-RS', { year:'numeric', month:'long', day:'numeric' });
+  el.dataset.date = d.toISOString().split('T')[0];
+}
+
+function pickRegDate() {
+  const h = document.createElement('input'); h.type = 'date';
+  h.value = document.getElementById('reg-date-display').dataset.date || '';
+  h.style.cssText = 'position:fixed;opacity:0;pointer-events:none;top:0;left:0';
+  document.body.appendChild(h);
+  h.addEventListener('change', () => { if (h.value) setRegDate(new Date(h.value+'T12:00:00')); document.body.removeChild(h); });
+  h.focus(); h.click();
+  setTimeout(() => { if (document.body.contains(h)) document.body.removeChild(h); }, 10000);
+}
+
+function saveRegular() {
+  const name   = document.getElementById('reg-name').value.trim();
+  const amount = parseFloat(document.getElementById('reg-amount').value);
+  const currency = document.getElementById('reg-currency').value;
+  const nextDate = document.getElementById('reg-date-display').dataset.date;
+  if (!name)   { alert('Unesite naziv!'); return; }
+  if (!amount) { alert('Unesite iznos!'); return; }
+  const list = getRegulars();
+  list.push({ id: Date.now(), name, amount, currency, catId: selectedRegCatId, freq: selectedRegFreq, nextDate: nextDate || new Date().toISOString().split('T')[0] });
+  saveRegulars(list);
+  navigate('regular');
+}
+
+// ============================================================
+// PODSETNICI
+// ============================================================
+let selectedRemFreq = 'once';
+
+function getReminders() {
+  const raw = lsGet('k_reminders');
+  if (raw) { try { const p = JSON.parse(raw); if (Array.isArray(p)) return p; } catch(e) {} }
+  return [];
+}
+function saveReminders(data) { lsSet('k_reminders', JSON.stringify(data)); }
+
+const REM_FREQ_LABELS = { once:'Jednom', daily:'Dnevno', weekly:'Nedeljno', monthly:'Mesečno' };
+
+function initReminders() {
+  const list = getReminders();
+  const el   = document.getElementById('reminders-list');
+  if (!el) return;
+
+  if (!list.length) {
+    el.innerHTML = `
+      <div style="text-align:center;padding:60px 20px;color:var(--text-muted)">
+        <div style="font-size:48px;margin-bottom:12px">🔔</div>
+        <p style="font-size:15px;font-weight:700">Nema podsetnika</p>
+        <p style="font-size:13px;margin-top:6px">Dodaj podsetnik pritiskom na +</p>
+      </div>`;
+    return;
+  }
+
+  const sorted = [...list].sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
+  el.innerHTML = sorted.map(r => {
+    const d      = new Date(r.date + 'T' + (r.time || '00:00'));
+    const today  = new Date(); today.setHours(0,0,0,0);
+    const isPast = d < new Date();
+    const dateLabel = d.toLocaleDateString('sr-RS', { day:'numeric', month:'long', year:'numeric' });
+    const timeLabel = r.time || '';
+
+    return `
+      <div class="cat-item" style="margin-bottom:10px;opacity:${isPast?'0.55':'1'}">
+        <div style="width:44px;height:44px;border-radius:50%;background:${isPast?'#95a5a620':'#f5a62320'};
+             display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">
+          ${isPast ? '✅' : '🔔'}
+        </div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:15px">${r.title}</div>
+          ${r.note ? `<div style="font-size:12px;color:var(--text-muted);margin-top:1px">${r.note}</div>` : ''}
+          <div style="font-size:12px;color:var(--text-muted);margin-top:3px">
+            📅 ${dateLabel}${timeLabel ? ' · ⏰ ' + timeLabel : ''} · ${REM_FREQ_LABELS[r.freq] || 'Jednom'}
+          </div>
+        </div>
+        <button onclick="deleteReminder(${r.id})" style="background:none;border:none;cursor:pointer;color:#e74c3c;font-size:18px;padding:4px 8px">🗑️</button>
+      </div>`;
+  }).join('');
+}
+
+function deleteReminder(id) {
+  if (!confirm('Obrisati podsetnik?')) return;
+  saveReminders(getReminders().filter(r => r.id !== id));
+  initReminders();
+}
+
+function initNewReminder() {
+  selectedRemFreq = 'once';
+  document.getElementById('rem-title').value = '';
+  document.getElementById('rem-note').value  = '';
+  document.getElementById('rem-time').value  = '09:00';
+  document.querySelectorAll('#screen-new-reminder .freq-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+  setRemDate(new Date());
+}
+
+function setRemDate(d) {
+  const el = document.getElementById('rem-date-display');
+  if (!el) return;
+  el.textContent  = d.toLocaleDateString('sr-RS', { year:'numeric', month:'long', day:'numeric' });
+  el.dataset.date = d.toISOString().split('T')[0];
+}
+
+function pickRemDate() {
+  const h = document.createElement('input'); h.type = 'date';
+  h.value = document.getElementById('rem-date-display').dataset.date || '';
+  h.style.cssText = 'position:fixed;opacity:0;pointer-events:none;top:0;left:0';
+  document.body.appendChild(h);
+  h.addEventListener('change', () => { if (h.value) setRemDate(new Date(h.value+'T12:00:00')); document.body.removeChild(h); });
+  h.focus(); h.click();
+  setTimeout(() => { if (document.body.contains(h)) document.body.removeChild(h); }, 10000);
+}
+
+function selectRemFreq(btn, freq) {
+  selectedRemFreq = freq;
+  document.querySelectorAll('#screen-new-reminder .freq-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function saveReminder() {
+  const title = document.getElementById('rem-title').value.trim();
+  const note  = document.getElementById('rem-note').value.trim();
+  const date  = document.getElementById('rem-date-display').dataset.date;
+  const time  = document.getElementById('rem-time').value;
+  if (!title) { alert('Unesite naslov!'); return; }
+  const list = getReminders();
+  list.push({ id: Date.now(), title, note, date: date || new Date().toISOString().split('T')[0], time, freq: selectedRemFreq });
+  saveReminders(list);
+  navigate('reminders');
 }

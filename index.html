@@ -9,12 +9,12 @@
 <meta name="apple-mobile-web-app-title" content="Kasica">
 <link rel="manifest" href="manifest.json">
 <title>Kasica — Budget App</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- SPLASH SCREEN -->
+<!-- SPLASH -->
 <div id="splash">
   <div class="splash-logo">
     <div class="splash-icon">🐷</div>
@@ -23,10 +23,9 @@
   </div>
 </div>
 
-<!-- APP WRAPPER -->
 <div id="app" class="hidden">
 
-  <!-- SIDEBAR DRAWER -->
+  <!-- SIDEBAR -->
   <div id="overlay" class="overlay hidden" onclick="closeSidebar()"></div>
   <nav id="sidebar" class="sidebar">
     <div class="sidebar-header">
@@ -49,7 +48,7 @@
     </ul>
   </nav>
 
-  <!-- ============ HOME SCREEN ============ -->
+  <!-- ===== HOME ===== -->
   <div id="screen-home" class="screen active">
     <header class="app-header">
       <button class="icon-btn" onclick="openSidebar()">
@@ -81,27 +80,20 @@
         </div>
         <div class="period-nav">
           <button onclick="prevPeriod()">‹</button>
-          <span id="period-label">Danas, 30. mart</span>
+          <span id="period-label">Danas</span>
           <button onclick="nextPeriod()" id="next-period-btn">›</button>
         </div>
         <div class="donut-wrapper">
           <canvas id="donut-chart" width="220" height="220"></canvas>
-          <div class="donut-center">
-            <span id="donut-total">2 845 $</span>
-          </div>
+          <div class="donut-center"><span id="donut-total">0 $</span></div>
         </div>
       </div>
-
-      <div class="categories-list" id="categories-list">
-        <!-- filled by JS -->
-      </div>
+      <div class="categories-list" id="categories-list"></div>
     </div>
-
-    <!-- FAB -->
     <button class="fab" onclick="navigate('add-transaction')">+</button>
   </div>
 
-  <!-- ============ ADD TRANSACTION ============ -->
+  <!-- ===== DODAJ TRANSAKCIJU ===== -->
   <div id="screen-add-transaction" class="screen">
     <header class="app-header">
       <button class="icon-btn" onclick="goBack()">
@@ -111,21 +103,19 @@
       <div style="width:40px"></div>
     </header>
     <div class="tabs">
-      <button class="tab active" id="tx-expense-tab" onclick="switchTxTab('expense',this)">TROŠKOVI</button>
-      <button class="tab" id="tx-income-tab" onclick="switchTxTab('income',this)">PRIHODI</button>
+      <button class="tab active" onclick="switchTxTab('expense',this)">TROŠKOVI</button>
+      <button class="tab" onclick="switchTxTab('income',this)">PRIHODI</button>
     </div>
     <div class="add-tx-content">
       <div class="amount-row">
-        <input type="number" id="tx-amount" class="amount-input" placeholder="0" oninput="convertAmount()" />
+        <input type="number" id="tx-amount" class="amount-input" placeholder="0" oninput="convertAmount()"/>
         <span class="currency-label" id="tx-currency">USD</span>
         <span class="equals"> = </span>
         <span class="converted-amount" id="tx-converted">0.00</span>
         <span class="converted-currency" id="tx-converted-currency">€</span>
       </div>
       <div class="section-label">Kategorije</div>
-      <div class="cat-grid" id="tx-cat-grid">
-        <!-- filled by JS -->
-      </div>
+      <div class="cat-grid" id="tx-cat-grid"></div>
       <div class="section-label">Datum</div>
       <div class="date-picker-row" onclick="pickDate()">
         <span class="date-value" id="tx-date-display"></span>
@@ -136,7 +126,7 @@
     </div>
   </div>
 
-  <!-- ============ OPERATIONS ============ -->
+  <!-- ===== OPERACIJE ===== -->
   <div id="screen-operations" class="screen">
     <header class="app-header">
       <button class="icon-btn" onclick="goBack()">
@@ -150,31 +140,14 @@
       <button class="tab" onclick="switchOpsTab('income',this)">PRIHODI</button>
     </div>
     <div class="ops-content">
-      <div class="card">
-        <div class="period-tabs">
-          <button class="period-tab" onclick="switchOpsPeriod('day',this)">Dan</button>
-          <button class="period-tab active" onclick="switchOpsPeriod('week',this)">Nedelja</button>
-          <button class="period-tab" onclick="switchOpsPeriod('month',this)">Mesec</button>
-          <button class="period-tab" onclick="switchOpsPeriod('year',this)">Godina</button>
-          <button class="period-tab" onclick="switchOpsPeriod('period',this)">Period</button>
-        </div>
-        <div class="period-nav">
-          <button onclick="prevOpsPeriod()">‹</button>
-          <span id="ops-period-label">22. jul – 28. jul</span>
-          <button onclick="nextOpsPeriod()">›</button>
-        </div>
-      </div>
       <div class="ops-total-row">
-        <strong id="ops-total">Ukupno: 1 030 $</strong>
-        <div class="sort-btn">Po datumu ▾</div>
+        <strong id="ops-total">Ukupno: 0 $</strong>
       </div>
-      <div id="ops-list" class="ops-list">
-        <!-- filled by JS -->
-      </div>
+      <div id="ops-list" class="ops-list"></div>
     </div>
   </div>
 
-  <!-- ============ CATEGORIES ============ -->
+  <!-- ===== KATEGORIJE ===== -->
   <div id="screen-categories" class="screen">
     <header class="app-header">
       <button class="icon-btn" onclick="goBack()">
@@ -185,11 +158,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
     </header>
-    <div class="cat-list-screen" id="cat-list-screen">
-    </div>
+    <div class="cat-list-screen" id="cat-list-screen"></div>
   </div>
 
-  <!-- ============ NEW CATEGORY ============ -->
+  <!-- ===== NOVA KATEGORIJA ===== -->
   <div id="screen-new-category" class="screen">
     <header class="app-header">
       <button class="icon-btn" onclick="goBack()">
@@ -200,28 +172,24 @@
     </header>
     <div class="new-cat-content">
       <div class="new-cat-name-row">
-        <div class="new-cat-preview" id="new-cat-preview" style="background:#3a7d5a">
+        <div class="new-cat-preview" id="new-cat-preview" style="background:#4a90d9">
           <span id="new-cat-icon-preview">🛒</span>
         </div>
-        <input type="text" id="new-cat-name" class="new-cat-name-input" placeholder="Naziv kategorije" value="Kupovina">
+        <input type="text" id="new-cat-name" class="new-cat-name-input" placeholder="Naziv kategorije">
       </div>
       <div class="radio-row">
         <label class="radio-label"><input type="radio" name="cat-type" value="expense" checked> Trošak</label>
         <label class="radio-label"><input type="radio" name="cat-type" value="income"> Prihod</label>
       </div>
       <div class="section-label">Ikone</div>
-      <div class="icon-grid" id="icon-grid">
-        <!-- filled by JS -->
-      </div>
+      <div class="icon-grid" id="icon-grid"></div>
       <div class="section-label">Boja</div>
-      <div class="color-row" id="color-row">
-        <!-- filled by JS -->
-      </div>
+      <div class="color-row" id="color-row"></div>
       <button class="add-btn" onclick="saveCategory()">Dodaj</button>
     </div>
   </div>
 
-  <!-- ============ CHARTS ============ -->
+  <!-- ===== GRAFIKONI ===== -->
   <div id="screen-charts" class="screen">
     <header class="app-header">
       <button class="icon-btn" onclick="goBack()">
@@ -232,31 +200,164 @@
     </header>
     <div class="charts-content">
       <div class="card" style="padding:20px">
-        <h3 style="margin:0 0 16px;color:#333;font-size:15px">Mesečni pregled</h3>
-        <canvas id="bar-chart" width="300" height="200"></canvas>
+        <h3 style="margin:0 0 16px;color:var(--text);font-size:15px;font-weight:800">Mesečni troškovi</h3>
+        <canvas id="bar-chart" width="300" height="180"></canvas>
       </div>
       <div class="card" style="padding:20px;margin-top:12px">
-        <h3 style="margin:0 0 16px;color:#333;font-size:15px">Kategorije — ovaj mesec</h3>
+        <h3 style="margin:0 0 16px;color:var(--text);font-size:15px;font-weight:800">Po kategorijama</h3>
         <canvas id="pie-chart" width="200" height="200" style="display:block;margin:0 auto"></canvas>
       </div>
     </div>
   </div>
 
-  <!-- ============ ACCOUNTS ============ -->
+  <!-- ===== RAČUNI ===== -->
   <div id="screen-accounts" class="screen">
     <header class="app-header">
       <button class="icon-btn" onclick="goBack()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
       </button>
       <span class="header-title">Računi</span>
-      <button class="icon-btn" onclick="addAccount()">
+      <button class="icon-btn" onclick="navigate('new-account')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
     </header>
     <div class="accounts-content" id="accounts-content"></div>
   </div>
 
-  <!-- ============ SETTINGS ============ -->
+  <!-- ===== NOVI RACUN ===== -->
+  <div id="screen-new-account" class="screen">
+    <header class="app-header">
+      <button class="icon-btn" onclick="goBack()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      </button>
+      <span class="header-title">Novi račun</span>
+      <div style="width:40px"></div>
+    </header>
+    <div class="new-cat-content">
+      <div class="section-label">Naziv</div>
+      <input type="text" id="acc-name" class="comment-input" placeholder="npr. Gotovina, Banka..." style="font-size:17px;padding:12px 0;margin-bottom:8px">
+      <div class="section-label">Početni balans</div>
+      <input type="number" id="acc-balance" class="comment-input" placeholder="0" style="font-size:17px;padding:12px 0;margin-bottom:8px">
+      <div class="section-label">Valuta</div>
+      <select id="acc-currency" style="width:100%;border:none;border-bottom:1.5px solid var(--border);background:none;font-size:16px;font-family:'Nunito',sans-serif;padding:12px 0;outline:none;color:var(--text);margin-bottom:8px">
+        <option value="USD">USD ($)</option>
+        <option value="EUR">EUR (€)</option>
+        <option value="RSD">RSD (din)</option>
+        <option value="GBP">GBP (£)</option>
+      </select>
+      <div class="section-label">Ikona</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 20px">
+        <span class="acc-icon-opt selected" onclick="selectAccIcon(this,'💵')">💵</span>
+        <span class="acc-icon-opt" onclick="selectAccIcon(this,'🏦')">🏦</span>
+        <span class="acc-icon-opt" onclick="selectAccIcon(this,'💳')">💳</span>
+        <span class="acc-icon-opt" onclick="selectAccIcon(this,'🏧')">🏧</span>
+        <span class="acc-icon-opt" onclick="selectAccIcon(this,'💼')">💼</span>
+        <span class="acc-icon-opt" onclick="selectAccIcon(this,'🐷')">🐷</span>
+        <span class="acc-icon-opt" onclick="selectAccIcon(this,'🪙')">🪙</span>
+        <span class="acc-icon-opt" onclick="selectAccIcon(this,'💰')">💰</span>
+      </div>
+      <button class="add-btn" onclick="saveAccount()">Dodaj račun</button>
+    </div>
+  </div>
+
+  <!-- ===== REDOVNA PLAĆANJA ===== -->
+  <div id="screen-regular" class="screen">
+    <header class="app-header">
+      <button class="icon-btn" onclick="goBack()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      </button>
+      <span class="header-title">Redovna plaćanja</span>
+      <button class="icon-btn" onclick="navigate('new-regular')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </header>
+    <div id="regular-list" style="padding:12px 12px 80px;overflow-y:auto;flex:1"></div>
+  </div>
+
+  <!-- ===== NOVO REDOVNO PLAĆANJE ===== -->
+  <div id="screen-new-regular" class="screen">
+    <header class="app-header">
+      <button class="icon-btn" onclick="goBack()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      </button>
+      <span class="header-title">Novo plaćanje</span>
+      <div style="width:40px"></div>
+    </header>
+    <div class="new-cat-content">
+      <div class="section-label">Naziv</div>
+      <input type="text" id="reg-name" class="comment-input" placeholder="npr. Kirija, Netflix..." style="font-size:17px;padding:12px 0;margin-bottom:8px">
+      <div class="section-label">Iznos</div>
+      <div style="display:flex;align-items:center;gap:12px;border-bottom:1.5px solid var(--border);padding-bottom:12px;margin-bottom:8px">
+        <input type="number" id="reg-amount" class="amount-input" placeholder="0" style="font-size:28px;width:120px">
+        <select id="reg-currency" style="border:none;background:none;font-size:16px;font-family:'Nunito',sans-serif;color:var(--green);font-weight:700;outline:none">
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+          <option value="RSD">RSD</option>
+          <option value="GBP">GBP</option>
+        </select>
+      </div>
+      <div class="section-label">Kategorija</div>
+      <div id="reg-cat-grid" class="cat-grid" style="margin-bottom:16px"></div>
+      <div class="section-label">Učestalost</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 20px">
+        <button class="freq-btn active" onclick="selectFreq(this,'daily')">Dnevno</button>
+        <button class="freq-btn" onclick="selectFreq(this,'weekly')">Nedeljno</button>
+        <button class="freq-btn" onclick="selectFreq(this,'monthly')">Mesečno</button>
+        <button class="freq-btn" onclick="selectFreq(this,'yearly')">Godišnje</button>
+      </div>
+      <div class="section-label">Sledeće plaćanje</div>
+      <div class="date-picker-row" onclick="pickRegDate()" style="margin-bottom:20px">
+        <span class="date-value" id="reg-date-display"></span>
+      </div>
+      <button class="add-btn" onclick="saveRegular()">Dodaj</button>
+    </div>
+  </div>
+
+  <!-- ===== PODSETNICI ===== -->
+  <div id="screen-reminders" class="screen">
+    <header class="app-header">
+      <button class="icon-btn" onclick="goBack()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      </button>
+      <span class="header-title">Podsetnici</span>
+      <button class="icon-btn" onclick="navigate('new-reminder')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </header>
+    <div id="reminders-list" style="padding:12px 12px 80px;overflow-y:auto;flex:1"></div>
+  </div>
+
+  <!-- ===== NOVI PODSETNIK ===== -->
+  <div id="screen-new-reminder" class="screen">
+    <header class="app-header">
+      <button class="icon-btn" onclick="goBack()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      </button>
+      <span class="header-title">Novi podsetnik</span>
+      <div style="width:40px"></div>
+    </header>
+    <div class="new-cat-content">
+      <div class="section-label">Naslov</div>
+      <input type="text" id="rem-title" class="comment-input" placeholder="npr. Plati struju..." style="font-size:17px;padding:12px 0;margin-bottom:8px">
+      <div class="section-label">Beleška</div>
+      <input type="text" id="rem-note" class="comment-input" placeholder="Opciono" style="padding:12px 0;margin-bottom:8px">
+      <div class="section-label">Datum i vreme</div>
+      <div class="date-picker-row" onclick="pickRemDate()" style="margin-bottom:8px">
+        <span class="date-value" id="rem-date-display"></span>
+      </div>
+      <input type="time" id="rem-time" style="width:100%;border:none;border-bottom:1.5px solid var(--border);background:none;font-size:16px;font-family:'Nunito',sans-serif;padding:12px 0;outline:none;color:var(--text);margin-bottom:20px">
+      <div class="section-label">Ponavljanje</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 20px">
+        <button class="freq-btn active" onclick="selectRemFreq(this,'once')">Jednom</button>
+        <button class="freq-btn" onclick="selectRemFreq(this,'daily')">Dnevno</button>
+        <button class="freq-btn" onclick="selectRemFreq(this,'weekly')">Nedeljno</button>
+        <button class="freq-btn" onclick="selectRemFreq(this,'monthly')">Mesečno</button>
+      </div>
+      <button class="add-btn" onclick="saveReminder()">Dodaj podsetnik</button>
+    </div>
+  </div>
+
+  <!-- ===== PODEŠAVANJA ===== -->
   <div id="screen-settings" class="screen">
     <header class="app-header">
       <button class="icon-btn" onclick="goBack()">
@@ -283,22 +384,13 @@
             <option value="dark">Tamna</option>
           </select>
         </div>
-        <div class="settings-item">
-          <span>Jezik</span>
-          <select>
-            <option>Srpski</option>
-            <option>English</option>
-          </select>
-        </div>
       </div>
       <div class="settings-group">
         <div class="settings-item danger" onclick="clearData()">
-          <span>Obriši sve podatke</span>
-          <span>›</span>
+          <span>Obriši sve podatke</span><span>›</span>
         </div>
         <div class="settings-item" onclick="exportData()">
-          <span>Izvezi podatke (JSON)</span>
-          <span>›</span>
+          <span>Izvezi podatke (JSON)</span><span>›</span>
         </div>
       </div>
       <p class="app-version">Kasica v1.0.0</p>
@@ -306,12 +398,9 @@
   </div>
 
 </div><!-- #app -->
-
 <script src="app.js"></script>
 <script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
-}
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
 </html>
