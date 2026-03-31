@@ -371,9 +371,11 @@ function drawDonut() {
 }
 
 function openOpsForTab(tab) {
+  // postavi tab PRE navigate, i spreči initOperations da ga resetuje
   STATE.opsTab = tab;
+  STATE._skipOpsInit = true;
   navigate('operations');
-  // sinhronizuj tab dugmad nakon navigate
+  // sinhronizuj dugmad
   document.querySelectorAll('#screen-operations .tabs .tab').forEach((b, i) => {
     b.classList.toggle('active', (i === 0 && tab === 'expense') || (i === 1 && tab === 'income'));
   });
@@ -381,10 +383,46 @@ function openOpsForTab(tab) {
 }
 
 function editBalance() {
-  const val = prompt('Novi balans:', DB.balance);
-  if (val === null) return;
-  const num = parseFloat(val);
-  if (!isNaN(num)) { DB.balance = num; saveDB(); initHome(); }
+  const old = document.getElementById('app-modal');
+  if (old) old.remove();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'app-modal';
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-icon">💰</div>
+      <div class="modal-title">Izmeni balans</div>
+      <div class="modal-msg">Unesite novi iznos balansa</div>
+      <input id="balance-input" type="number" placeholder="0"
+        value="${DB.balance}"
+        style="width:100%;border:none;border-bottom:2px solid var(--green);
+               background:none;font-size:28px;font-weight:800;text-align:center;
+               outline:none;font-family:'Nunito',sans-serif;color:var(--text);
+               padding:8px 0;margin-bottom:24px">
+      <div class="modal-btns">
+        <button class="modal-btn cancel" id="modal-cancel">Odustani</button>
+        <button class="modal-btn confirm" id="modal-confirm">Sačuvaj</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+
+  const input = document.getElementById('balance-input');
+  input.focus();
+  input.select();
+
+  document.getElementById('modal-cancel').onclick = () => overlay.remove();
+  document.getElementById('modal-confirm').onclick = () => {
+    const num = parseFloat(input.value);
+    if (!isNaN(num)) { DB.balance = num; saveDB(); initHome(); }
+    overlay.remove();
+  };
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('modal-confirm').click();
+    if (e.key === 'Escape') overlay.remove();
+  });
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
 }
 
 // ===== DODAJ TRANSAKCIJU =====
@@ -509,6 +547,10 @@ function addTransaction() {
 // ===== OPERACIJE =====
 function initOperations() {
   DB = loadDB();
+  if (STATE._skipOpsInit) {
+    STATE._skipOpsInit = false;
+    return; // tab i lista već postavljeni od openOpsForTab
+  }
   STATE.opsTab = 'expense';
   document.querySelectorAll('#screen-operations .tabs .tab').forEach((b, i) => {
     b.classList.toggle('active', i === 0);
@@ -926,13 +968,46 @@ function editAccount(id) {
   const accounts = getAccounts();
   const acc = accounts.find(a => a.id === id);
   if (!acc) return;
-  const newBalance = prompt(`Novi balans za "${acc.name}":`, acc.balance);
-  if (newBalance === null) return;
-  const num = parseFloat(newBalance);
-  if (isNaN(num)) { alert('Neispravan iznos'); return; }
-  acc.balance = num;
-  saveAccounts(accounts);
-  initAccounts();
+
+  const old = document.getElementById('app-modal');
+  if (old) old.remove();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'app-modal';
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-icon">${acc.icon}</div>
+      <div class="modal-title">${acc.name}</div>
+      <div class="modal-msg">Unesite novi balans</div>
+      <input id="acc-balance-input" type="number" placeholder="0"
+        value="${acc.balance}"
+        style="width:100%;border:none;border-bottom:2px solid var(--green);
+               background:none;font-size:28px;font-weight:800;text-align:center;
+               outline:none;font-family:'Nunito',sans-serif;color:var(--text);
+               padding:8px 0;margin-bottom:24px">
+      <div class="modal-btns">
+        <button class="modal-btn cancel" id="modal-cancel">Odustani</button>
+        <button class="modal-btn confirm" id="modal-confirm">Sačuvaj</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+
+  const input = document.getElementById('acc-balance-input');
+  input.focus(); input.select();
+
+  document.getElementById('modal-cancel').onclick = () => overlay.remove();
+  document.getElementById('modal-confirm').onclick = () => {
+    const num = parseFloat(input.value);
+    if (!isNaN(num)) { acc.balance = num; saveAccounts(accounts); initAccounts(); }
+    overlay.remove();
+  };
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('modal-confirm').click();
+    if (e.key === 'Escape') overlay.remove();
+  });
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
 }
 
 function saveAccount() {
