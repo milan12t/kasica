@@ -874,7 +874,7 @@ function saveAccount() {
   const accounts = getAccounts();
   accounts.push({ id: Date.now(), name, balance, currency, icon: selectedAccIcon });
   saveAccounts(accounts);
-  navigate('accounts');
+  navigate('home');
 }
 
 // ============================================================
