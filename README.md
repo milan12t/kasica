@@ -1,4 +1,4 @@
-# 🐷 Kasica — Budget App
+# 🐷 Kasica — Budžet App
 
 > Pametno upravljanje novcem. Jednostavna, brza i offline-ready PWA aplikacija za praćenje troškova i prihoda.
 
