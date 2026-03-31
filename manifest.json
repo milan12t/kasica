@@ -3,7 +3,6 @@
   "short_name": "Kasica",
   "description": "Pametno upravljanje novcem",
   "start_url": "/kasica/",
-  "scope": "/kasica/",
   "display": "standalone",
   "background_color": "#3a7d5a",
   "theme_color": "#3a7d5a",
