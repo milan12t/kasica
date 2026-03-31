@@ -181,6 +181,31 @@ function closeSidebar() {
   document.getElementById('overlay').classList.add('hidden');
 }
 
+// ===== CUSTOM CONFIRM MODAL =====
+function showConfirm({ icon = '🗑️', title, message, confirmText = 'Obriši', cancelText = 'Odustani', danger = true, onConfirm }) {
+  const old = document.getElementById('app-modal');
+  if (old) old.remove();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'app-modal';
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-icon">${icon}</div>
+      <div class="modal-title">${title}</div>
+      ${message ? `<div class="modal-msg">${message}</div>` : ''}
+      <div class="modal-btns">
+        <button class="modal-btn cancel" id="modal-cancel">${cancelText}</button>
+        <button class="modal-btn ${danger ? 'danger' : 'confirm'}" id="modal-confirm">${confirmText}</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  document.getElementById('modal-cancel').onclick  = () => overlay.remove();
+  document.getElementById('modal-confirm').onclick = () => { overlay.remove(); onConfirm(); };
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+}
+
 // ===== FORMAT NOVCA =====
 function fmt(amount, currency) {
   const sym = CURRENCY_SYMBOLS[currency] || currency || '$';
@@ -530,13 +555,22 @@ function renderOpsList() {
 }
 
 function deleteTx(id) {
-  if (!confirm('Obrisati ovu transakciju?')) return;
-  const tx = DB.transactions.find(t => t.id === id);
+  const tx  = DB.transactions.find(t => t.id === id);
   if (!tx) return;
-  DB.balance += tx.type === 'income' ? -tx.amount : tx.amount;
-  DB.transactions = DB.transactions.filter(t => t.id !== id);
-  saveDB();
-  renderOpsList();
+  const cat = DB.categories.find(c => c.id === tx.catId) || { name: 'Ostalo', icon: '❓' };
+  const sym = CURRENCY_SYMBOLS[tx.currency] || tx.currency;
+  showConfirm({
+    icon: cat.icon,
+    title: 'Obrisati transakciju?',
+    message: `${cat.name} · ${tx.amount} ${sym}`,
+    confirmText: 'Obriši',
+    onConfirm: () => {
+      DB.balance += tx.type === 'income' ? -tx.amount : tx.amount;
+      DB.transactions = DB.transactions.filter(t => t.id !== id);
+      saveDB();
+      renderOpsList();
+    }
+  });
 }
 
 // ===== KATEGORIJE =====
@@ -562,10 +596,19 @@ function initCategoryScreen() {
 }
 
 function deleteCat(id) {
-  if (!confirm('Obrisati kategoriju?')) return;
-  DB.categories = DB.categories.filter(c => c.id !== id);
-  saveDB();
-  initCategoryScreen();
+  const cat = DB.categories.find(c => c.id === id);
+  if (!cat) return;
+  showConfirm({
+    icon: cat.icon,
+    title: 'Obrisati kategoriju?',
+    message: `"${cat.name}" će biti trajno obrisana`,
+    confirmText: 'Obriši',
+    onConfirm: () => {
+      DB.categories = DB.categories.filter(c => c.id !== id);
+      saveDB();
+      initCategoryScreen();
+    }
+  });
 }
 
 // ===== NOVA KATEGORIJA =====
@@ -762,13 +805,20 @@ function saveSettings() {
 }
 
 function clearData() {
-  if (!confirm('Obrisati SVE podatke? Ne moze se ponistiti.')) return;
-  ['k_cats','k_tx','k_balance','k_currency','k_theme','k_accounts'].forEach(k => {
-    try { localStorage.removeItem(k); } catch(e) {}
+  showConfirm({
+    icon: '⚠️',
+    title: 'Obrisati sve podatke?',
+    message: 'Transakcije, kategorije i podešavanja biće trajno obrisani. Ovo se ne može poništiti.',
+    confirmText: 'Obriši sve',
+    onConfirm: () => {
+      ['k_cats','k_tx','k_balance','k_currency','k_theme','k_accounts','k_regulars','k_reminders'].forEach(k => {
+        try { localStorage.removeItem(k); } catch(e) {}
+      });
+      STATE.baseCurrency = 'EUR';
+      DB = loadDB();
+      navigate('home');
+    }
   });
-  STATE.baseCurrency = 'USD';
-  DB = loadDB();
-  navigate('home');
 }
 
 function exportData() {
@@ -847,10 +897,18 @@ function initAccounts() {
 }
 
 function deleteAccount(id) {
-  if (!confirm('Obrisati ovaj račun?')) return;
-  const accounts = getAccounts().filter(a => a.id !== id);
-  saveAccounts(accounts);
-  initAccounts();
+  const acc = getAccounts().find(a => a.id === id);
+  if (!acc) return;
+  showConfirm({
+    icon: acc.icon,
+    title: 'Obrisati račun?',
+    message: `"${acc.name}" · ${fmt(acc.balance, acc.currency)}`,
+    confirmText: 'Obriši',
+    onConfirm: () => {
+      saveAccounts(getAccounts().filter(a => a.id !== id));
+      initAccounts();
+    }
+  });
 }
 
 function editAccount(id) {
@@ -934,9 +992,19 @@ function initRegular() {
 }
 
 function deleteRegular(id) {
-  if (!confirm('Obrisati ovo plaćanje?')) return;
-  saveRegulars(getRegulars().filter(r => r.id !== id));
-  initRegular();
+  const r = getRegulars().find(x => x.id === id);
+  if (!r) return;
+  const sym = CURRENCY_SYMBOLS[r.currency] || r.currency;
+  showConfirm({
+    icon: '🔄',
+    title: 'Obrisati plaćanje?',
+    message: `"${r.name}" · ${r.amount} ${sym}`,
+    confirmText: 'Obriši',
+    onConfirm: () => {
+      saveRegulars(getRegulars().filter(x => x.id !== id));
+      initRegular();
+    }
+  });
 }
 
 function initNewRegular() {
@@ -1057,9 +1125,18 @@ function initReminders() {
 }
 
 function deleteReminder(id) {
-  if (!confirm('Obrisati podsetnik?')) return;
-  saveReminders(getReminders().filter(r => r.id !== id));
-  initReminders();
+  const r = getReminders().find(x => x.id === id);
+  if (!r) return;
+  showConfirm({
+    icon: '🔔',
+    title: 'Obrisati podsetnik?',
+    message: `"${r.title}"`,
+    confirmText: 'Obriši',
+    onConfirm: () => {
+      saveReminders(getReminders().filter(x => x.id !== id));
+      initReminders();
+    }
+  });
 }
 
 function initNewReminder() {
