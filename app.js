@@ -1,124 +1,147 @@
-// ===== STATE =====
-const STATE = {
-  currentScreen: 'home',
-  prevScreen: null,
-  mainTab: 'expense',
-  txTab: 'expense',
-  opsTab: 'expense',
-  period: 'day',
-  opsPeriod: 'week',
-  periodOffset: 0,
-  opsPeriodOffset: 0,
-  selectedCategoryId: null,
-  selectedIcon: '🛒',
-  selectedColor: '#3a7d5a',
-  newCatType: 'expense',
-  balance: 2845,
-  baseCurrency: 'USD',
-};
+// ============================================================
+// KASICA — app.js  (kompletno prepisano, sve greške popravljene)
+// ============================================================
+
+// ===== KONSTANTE =====
+const CURRENCY_SYMBOLS = { USD: '$', EUR: '€', GBP: '£', RSD: 'din', JPY: '¥' };
+
+const ICON_LIST = [
+  '🛒','🍽️','🏠','🏛️','❤️','❓','🚌','👨‍👩‍👧','🎁','✈️',
+  '🐾','⚡','🚗','💄','💪','💵','💻','📈','🏥','🎓',
+  '🎮','📱','🎵','🌍','⚽','🎨','🛍️','☕','🍕','🐶'
+];
+
+const COLORS = [
+  '#e74c3c','#27ae60','#4a90d9','#f5a623',
+  '#e91e63','#8bc34a','#00bcd4','#9b59b6',
+  '#ff5722','#607d8b'
+];
 
 const DEFAULT_CATS = [
-  { id: 1, name: 'Namirnice', icon: '🛒', color: '#4a90d9', type: 'expense' },
-  { id: 2, name: 'Kupovina', icon: '🛍️', color: '#9b59b6', type: 'expense' },
-  { id: 3, name: 'Restorani', icon: '🍽️', color: '#f5a623', type: 'expense' },
-  { id: 4, name: 'Dom', icon: '🏠', color: '#e74c3c', type: 'expense' },
-  { id: 5, name: 'Krediti', icon: '🏛️', color: '#27ae60', type: 'expense' },
-  { id: 6, name: 'Zdravlje', icon: '❤️', color: '#e91e63', type: 'expense' },
-  { id: 7, name: 'Prevoz', icon: '🚌', color: '#00bcd4', type: 'expense' },
-  { id: 8, name: 'Ostalo', icon: '❓', color: '#95a5a6', type: 'expense' },
-  { id: 9, name: 'Plata', icon: '💵', color: '#27ae60', type: 'income' },
-  { id: 10, name: 'Freelance', icon: '💻', color: '#3498db', type: 'income' },
-  { id: 11, name: 'Poklon', icon: '🎁', color: '#e91e63', type: 'income' },
-  { id: 12, name: 'Investicije', icon: '📈', color: '#f5a623', type: 'income' },
+  { id: 1,  name: 'Namirnice',   icon: '🛒', color: '#4a90d9', type: 'expense' },
+  { id: 2,  name: 'Kupovina',    icon: '🛍️', color: '#9b59b6', type: 'expense' },
+  { id: 3,  name: 'Restorani',   icon: '🍽️', color: '#f5a623', type: 'expense' },
+  { id: 4,  name: 'Dom',         icon: '🏠', color: '#e74c3c', type: 'expense' },
+  { id: 5,  name: 'Krediti',     icon: '🏛️', color: '#27ae60', type: 'expense' },
+  { id: 6,  name: 'Zdravlje',    icon: '❤️', color: '#e91e63', type: 'expense' },
+  { id: 7,  name: 'Prevoz',      icon: '🚌', color: '#00bcd4', type: 'expense' },
+  { id: 8,  name: 'Ostalo',      icon: '❓', color: '#95a5a6', type: 'expense' },
+  { id: 9,  name: 'Plata',       icon: '💵', color: '#27ae60', type: 'income'  },
+  { id: 10, name: 'Freelance',   icon: '💻', color: '#3498db', type: 'income'  },
+  { id: 11, name: 'Poklon',      icon: '🎁', color: '#e91e63', type: 'income'  },
+  { id: 12, name: 'Investicije', icon: '📈', color: '#f5a623', type: 'income'  },
 ];
 
 const SAMPLE_TX = [
-  { id: 1, catId: 1, amount: 12, currency: 'USD', note: '', date: '2024-07-22', type: 'expense' },
-  { id: 2, catId: 7, amount: 8, currency: 'USD', note: '', date: '2024-07-22', type: 'expense' },
-  { id: 3, catId: 3, amount: 2500, currency: 'JPY', note: '', date: '2024-07-23', type: 'expense' },
-  { id: 4, catId: 1, amount: 20, currency: 'EUR', note: 'povrće sa pijace', date: '2024-07-25', type: 'expense' },
-  { id: 5, catId: 2, amount: 180, currency: 'USD', note: '', date: '2024-07-25', type: 'expense' },
-  { id: 6, catId: 7, amount: 10, currency: 'GBP', note: '', date: '2024-07-26', type: 'expense' },
-  { id: 7, catId: 5, amount: 980, currency: 'USD', note: '', date: '2024-07-25', type: 'expense' },
-  { id: 8, catId: 9, amount: 3500, currency: 'USD', note: '', date: '2024-07-01', type: 'income' },
+  { id: 1, catId: 1, amount: 12,   currency: 'USD', note: '',                 date: '2024-07-22', type: 'expense' },
+  { id: 2, catId: 7, amount: 8,    currency: 'USD', note: '',                 date: '2024-07-22', type: 'expense' },
+  { id: 3, catId: 3, amount: 2500, currency: 'JPY', note: '',                 date: '2024-07-23', type: 'expense' },
+  { id: 4, catId: 1, amount: 20,   currency: 'EUR', note: 'povrce sa pijace', date: '2024-07-25', type: 'expense' },
+  { id: 5, catId: 2, amount: 180,  currency: 'USD', note: '',                 date: '2024-07-25', type: 'expense' },
+  { id: 6, catId: 7, amount: 10,   currency: 'GBP', note: '',                 date: '2024-07-26', type: 'expense' },
+  { id: 7, catId: 5, amount: 980,  currency: 'USD', note: '',                 date: '2024-07-25', type: 'expense' },
+  { id: 8, catId: 9, amount: 3500, currency: 'USD', note: '',                 date: '2024-07-01', type: 'income'  },
 ];
 
-const CURRENCY_SYMBOLS = { USD: '$', EUR: '€', GBP: '£', RSD: 'din', JPY: '¥' };
-const ICON_LIST = ['🛒','🍽️','🏠','🏛️','❤️','❓','➕','🚌','👨‍👩‍👧','🎁','✈️','🐾','⚡','🚗','💄','💪','💵','💻','📈','🎁','🏥','🎓','🎮','📱','🎵','🌍','⚽','🎨'];
-const COLORS = ['#e74c3c','#27ae60','#4a90d9','#f5a623','#e91e63','#8bc34a','#00bcd4','#9b59b6','#ff5722','#607d8b'];
+// ===== STATE =====
+const STATE = {
+  currentScreen: 'home',
+  prevScreen:    'home',
+  mainTab:       'expense',
+  txTab:         'expense',
+  opsTab:        'expense',
+  period:        'day',
+  periodOffset:  0,
+  selectedCatId: null,
+  selectedIcon:  '🛒',
+  selectedColor: '#4a90d9',
+  baseCurrency:  'USD',
+};
 
-function load() {
+// ===== LOCALSTORAGE HELPERS =====
+function lsGet(key) {
+  try { return localStorage.getItem(key); } catch(e) { return null; }
+}
+function lsSet(key, val) {
+  try { localStorage.setItem(key, val); } catch(e) {}
+}
+
+// ===== UCITAVANJE I CUVANJE =====
+function loadDB() {
+  // kategorije
   let categories = DEFAULT_CATS;
+  const rawCats = lsGet('k_cats');
+  if (rawCats) {
+    try {
+      const p = JSON.parse(rawCats);
+      if (Array.isArray(p) && p.length > 0) categories = p;
+    } catch(e) {}
+  }
+
+  // transakcije
   let transactions = SAMPLE_TX;
+  const rawTx = lsGet('k_tx');
+  if (rawTx) {
+    try {
+      const p = JSON.parse(rawTx);
+      if (Array.isArray(p)) transactions = p;
+    } catch(e) {}
+  }
+
+  // balans
   let balance = 2845;
+  const rawBal = lsGet('k_balance');
+  if (rawBal !== null && rawBal !== '') {
+    const p = parseFloat(rawBal);
+    if (!isNaN(p)) balance = p;
+  }
 
-  try {
-    const rawCats = localStorage.getItem('kasica_cats');
-    if (rawCats) {
-      const parsed = JSON.parse(rawCats);
-      if (Array.isArray(parsed) && parsed.length > 0) categories = parsed;
-    }
-  } catch(e) {}
+  // valuta — ucitava se u STATE
+  const savedCur = lsGet('k_currency');
+  if (savedCur && CURRENCY_SYMBOLS[savedCur]) STATE.baseCurrency = savedCur;
 
-  try {
-    const rawTx = localStorage.getItem('kasica_tx');
-    if (rawTx) {
-      const parsed = JSON.parse(rawTx);
-      if (Array.isArray(parsed)) transactions = parsed;
-    }
-  } catch(e) {}
-
-  try {
-    const rawBal = localStorage.getItem('kasica_balance');
-    if (rawBal !== null) {
-      const parsed = parseFloat(rawBal);
-      if (!isNaN(parsed)) balance = parsed;
-    }
-  } catch(e) {}
+  // tema
+  const savedTheme = lsGet('k_theme');
+  if (savedTheme === 'dark') document.body.classList.add('dark');
+  else document.body.classList.remove('dark');
 
   return { categories, transactions, balance };
 }
 
-function save(data) {
-  try {
-    localStorage.setItem('kasica_cats', JSON.stringify(data.categories));
-    localStorage.setItem('kasica_tx', JSON.stringify(data.transactions));
-    localStorage.setItem('kasica_balance', String(data.balance));
-  } catch(e) {
-    alert('Greška pri čuvanju podataka: ' + e.message);
-  }
+function saveDB() {
+  lsSet('k_cats',    JSON.stringify(DB.categories));
+  lsSet('k_tx',      JSON.stringify(DB.transactions));
+  lsSet('k_balance', String(DB.balance));
 }
 
-let DB = load();
+let DB = loadDB();
 
-// ===== INIT =====
+// ===== BOOT =====
 window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     document.getElementById('app').classList.remove('hidden');
     document.getElementById('app').style.opacity = '1';
-    initHome();
-    setTxDate(new Date());
-    initCategoryScreen();
-    initNewCategoryScreen();
-    initAccounts();
-    initSettings();
-    initCharts();
+    navigate('home');
   }, 2000);
 });
 
-// ===== NAVIGATION =====
+// ===== NAVIGACIJA =====
 function navigate(screen) {
   STATE.prevScreen = STATE.currentScreen;
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById('screen-' + screen);
-  if (el) el.classList.add('active');
+  if (!el) return;
+  el.classList.add('active');
   STATE.currentScreen = screen;
-  if (screen === 'home') initHome();
-  if (screen === 'operations') initOperations();
-  if (screen === 'categories') initCategoryScreen();
+
+  if (screen === 'home')            initHome();
   if (screen === 'add-transaction') initAddTx();
-  if (screen === 'charts') initCharts();
-  if (screen === 'accounts') initAccounts();
+  if (screen === 'operations')      initOperations();
+  if (screen === 'categories')      initCategoryScreen();
+  if (screen === 'new-category')    initNewCatScreen();
+  if (screen === 'charts')          initCharts();
+  if (screen === 'accounts')        initAccounts();
+  if (screen === 'settings')        initSettings();
 }
 
 function goBack() {
@@ -135,20 +158,305 @@ function closeSidebar() {
   document.getElementById('overlay').classList.add('hidden');
 }
 
-// ===== TABS =====
+// ===== FORMAT NOVCA =====
+function fmt(amount, currency) {
+  const sym = CURRENCY_SYMBOLS[currency] || currency || '$';
+  return Math.round(amount).toLocaleString('sr-RS') + ' ' + sym;
+}
+
+// ===== HOME =====
+function initHome() {
+  DB = loadDB();
+  document.getElementById('balance-display').textContent = fmt(DB.balance, STATE.baseCurrency);
+  updatePeriodLabel();
+  renderHomeList();
+  drawDonut();
+}
+
 function switchTab(tab, btn) {
   STATE.mainTab = tab;
   document.querySelectorAll('#screen-home .tabs .tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  renderCategoryList();
+  renderHomeList();
   drawDonut();
+}
+
+function switchPeriod(p, btn) {
+  STATE.period = p;
+  STATE.periodOffset = 0;
+  document.querySelectorAll('#screen-home .period-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  updatePeriodLabel();
+  renderHomeList();
+  drawDonut();
+}
+
+function prevPeriod() {
+  STATE.periodOffset--;
+  updatePeriodLabel(); renderHomeList(); drawDonut();
+}
+function nextPeriod() {
+  if (STATE.periodOffset < 0) {
+    STATE.periodOffset++;
+    updatePeriodLabel(); renderHomeList(); drawDonut();
+  }
+}
+
+function updatePeriodLabel() {
+  const now = new Date();
+  const off = STATE.periodOffset;
+  const fmtD = d => d.toLocaleDateString('sr-RS', { day: 'numeric', month: 'long' });
+  let label = '';
+
+  if (STATE.period === 'day') {
+    const d = new Date(now); d.setDate(d.getDate() + off);
+    label = off === 0 ? 'Danas, ' + fmtD(d) : fmtD(d);
+  } else if (STATE.period === 'week') {
+    const s = new Date(now);
+    s.setDate(s.getDate() - ((s.getDay() + 6) % 7) + off * 7);
+    const e = new Date(s); e.setDate(e.getDate() + 6);
+    label = fmtD(s) + ' - ' + fmtD(e);
+  } else if (STATE.period === 'month') {
+    const d = new Date(now.getFullYear(), now.getMonth() + off, 1);
+    label = d.toLocaleDateString('sr-RS', { month: 'long', year: 'numeric' });
+  } else if (STATE.period === 'year') {
+    label = String(now.getFullYear() + off);
+  } else {
+    label = 'Svi periodi';
+  }
+
+  document.getElementById('period-label').textContent = label;
+  document.getElementById('next-period-btn').disabled = off >= 0;
+}
+
+function getPeriodTx(tab) {
+  const now = new Date();
+  const off = STATE.periodOffset;
+  return DB.transactions.filter(t => {
+    if (t.type !== tab) return false;
+    if (STATE.period === 'period') return true;
+    const d = new Date(t.date + 'T12:00:00');
+    if (STATE.period === 'day') {
+      const target = new Date(now); target.setDate(target.getDate() + off);
+      return d.toDateString() === target.toDateString();
+    }
+    if (STATE.period === 'week') {
+      const s = new Date(now);
+      s.setDate(s.getDate() - ((s.getDay() + 6) % 7) + off * 7);
+      s.setHours(0,0,0,0);
+      const e = new Date(s); e.setDate(e.getDate() + 6); e.setHours(23,59,59,999);
+      return d >= s && d <= e;
+    }
+    if (STATE.period === 'month') {
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() + off;
+    }
+    if (STATE.period === 'year') {
+      return d.getFullYear() === now.getFullYear() + off;
+    }
+    return true;
+  });
+}
+
+function renderHomeList() {
+  const el     = document.getElementById('categories-list');
+  const txList = getPeriodTx(STATE.mainTab);
+  const cats   = DB.categories.filter(c => c.type === STATE.mainTab);
+  const total  = txList.reduce((a, t) => a + t.amount, 0) || 1;
+
+  let html = '';
+  cats.forEach(cat => {
+    const sum = txList.filter(t => t.catId === cat.id).reduce((a, t) => a + t.amount, 0);
+    if (!sum) return;
+    const pct = Math.round(sum / total * 100);
+    html += `
+      <div class="cat-item" onclick="navigate('operations')">
+        <div class="cat-icon-circle" style="background:${cat.color}20;color:${cat.color}">
+          <span style="font-size:20px">${cat.icon}</span>
+        </div>
+        <span class="cat-name">${cat.name}</span>
+        <span class="cat-pct">${pct}%</span>
+        <span class="cat-amount">${fmt(sum, STATE.baseCurrency)}</span>
+      </div>`;
+  });
+
+  el.innerHTML = html ||
+    '<div style="text-align:center;color:var(--text-muted);padding:40px;font-size:14px">Nema transakcija za ovaj period</div>';
+}
+
+function drawDonut() {
+  const canvas = document.getElementById('donut-chart');
+  if (!canvas) return;
+  const ctx  = canvas.getContext('2d');
+  const cx   = 110, cy = 110, r = 90, inner = 60;
+  ctx.clearRect(0, 0, 220, 220);
+
+  const txList = getPeriodTx(STATE.mainTab);
+  const cats   = DB.categories.filter(c => c.type === STATE.mainTab);
+  const data   = cats.map(cat => ({
+    val:   txList.filter(t => t.catId === cat.id).reduce((a, t) => a + t.amount, 0),
+    color: cat.color,
+  })).filter(d => d.val > 0);
+
+  const total = data.reduce((a, d) => a + d.val, 0);
+
+  if (!total) {
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = '#e0e8e2'; ctx.lineWidth = 30; ctx.stroke();
+    document.getElementById('donut-total').textContent = fmt(0, STATE.baseCurrency);
+    return;
+  }
+
+  let angle = -Math.PI / 2;
+  const gap = data.length > 1 ? 0.04 : 0;
+  data.forEach(d => {
+    const slice = (d.val / total) * (Math.PI * 2 - gap * data.length);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r,     angle + gap / 2, angle + slice + gap / 2);
+    ctx.arc(cx, cy, inner, angle + slice + gap / 2, angle + gap / 2, true);
+    ctx.closePath();
+    ctx.fillStyle = d.color;
+    ctx.fill();
+    angle += slice + gap;
+  });
+
+  document.getElementById('donut-total').textContent = fmt(total, STATE.baseCurrency);
+}
+
+function editBalance() {
+  const val = prompt('Novi balans:', DB.balance);
+  if (val === null) return;
+  const num = parseFloat(val);
+  if (!isNaN(num)) { DB.balance = num; saveDB(); initHome(); }
+}
+
+// ===== DODAJ TRANSAKCIJU =====
+function initAddTx() {
+  DB = loadDB();
+  STATE.selectedCatId = null;
+  STATE.txTab = 'expense';
+
+  document.getElementById('tx-amount').value = '';
+  document.getElementById('tx-converted').textContent = '0.00';
+  document.getElementById('tx-comment').value = '';
+  document.getElementById('tx-currency').textContent = STATE.baseCurrency;
+
+  // resetuj tabove na Troškovi
+  document.querySelectorAll('#screen-add-transaction .tabs .tab').forEach((b, i) => {
+    b.classList.toggle('active', i === 0);
+  });
+
+  setTxDate(new Date());
+  renderTxCatGrid();
 }
 
 function switchTxTab(tab, btn) {
   STATE.txTab = tab;
+  STATE.selectedCatId = null;
   document.querySelectorAll('#screen-add-transaction .tabs .tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderTxCatGrid();
+}
+
+function renderTxCatGrid() {
+  const el = document.getElementById('tx-cat-grid');
+  if (!el) return;
+
+  // GLAVNI FIX: STATE.txTab je 'expense' ili 'income'
+  // cat.type je takodje 'expense' ili 'income' — sada se poklapa!
+  const cats = DB.categories.filter(c => c.type === STATE.txTab);
+
+  let html = cats.map(cat => {
+    const sel = STATE.selectedCatId === cat.id;
+    return `
+      <div class="cat-grid-item ${sel ? 'selected' : ''}" onclick="selectTxCat(${cat.id})">
+        <div class="cgi-circle" style="background:${sel ? cat.color : '#c5d4cc'}">
+          <span style="font-size:22px">${cat.icon}</span>
+        </div>
+        <span style="font-size:11px;font-weight:600;color:${sel ? cat.color : 'var(--text-muted)'};text-align:center;line-height:1.2">${cat.name}</span>
+      </div>`;
+  }).join('');
+
+  html += `
+    <div class="cat-grid-item" onclick="navigate('new-category')">
+      <div class="cgi-circle" style="background:#c5d4cc">
+        <span style="font-size:22px">➕</span>
+      </div>
+      <span style="font-size:11px;font-weight:600;color:var(--text-muted)">Nova</span>
+    </div>`;
+
+  el.innerHTML = html;
+}
+
+function selectTxCat(id) {
+  STATE.selectedCatId = id;
+  renderTxCatGrid();
+}
+
+function setTxDate(d) {
+  const el = document.getElementById('tx-date-display');
+  if (!el) return;
+  el.textContent = d.toLocaleDateString('sr-RS', { year: 'numeric', month: 'long', day: 'numeric' });
+  el.dataset.date = d.toISOString().split('T')[0];
+}
+
+function pickDate() {
+  const hidden = document.createElement('input');
+  hidden.type = 'date';
+  hidden.value = document.getElementById('tx-date-display').dataset.date || '';
+  hidden.style.cssText = 'position:fixed;opacity:0;pointer-events:none;top:0;left:0';
+  document.body.appendChild(hidden);
+  hidden.addEventListener('change', () => {
+    if (hidden.value) setTxDate(new Date(hidden.value + 'T12:00:00'));
+    if (document.body.contains(hidden)) document.body.removeChild(hidden);
+  });
+  hidden.focus(); hidden.click();
+  setTimeout(() => { if (document.body.contains(hidden)) document.body.removeChild(hidden); }, 10000);
+}
+
+function convertAmount() {
+  const val   = parseFloat(document.getElementById('tx-amount').value) || 0;
+  const rates = { USD: 1, EUR: 0.92, GBP: 0.79, RSD: 108, JPY: 149 };
+  const from  = STATE.baseCurrency;
+  const to    = from === 'USD' ? 'EUR' : 'USD';
+  const conv  = (val / (rates[from] || 1)) * (rates[to] || 1);
+  document.getElementById('tx-converted').textContent          = conv.toFixed(2);
+  document.getElementById('tx-currency').textContent           = from;
+  document.getElementById('tx-converted-currency').textContent = CURRENCY_SYMBOLS[to] || to;
+}
+
+function addTransaction() {
+  const amount = parseFloat(document.getElementById('tx-amount').value);
+  if (!amount || amount <= 0) { alert('Unesite iznos!');        return; }
+  if (!STATE.selectedCatId)   { alert('Izaberite kategoriju!'); return; }
+
+  const note = document.getElementById('tx-comment').value.trim();
+  const date = document.getElementById('tx-date-display').dataset.date
+             || new Date().toISOString().split('T')[0];
+
+  DB.transactions.push({
+    id:       Date.now(),
+    catId:    STATE.selectedCatId,
+    amount,
+    currency: STATE.baseCurrency,
+    note,
+    date,
+    type: STATE.txTab,
+  });
+
+  DB.balance += STATE.txTab === 'income' ? amount : -amount;
+  saveDB();
+  navigate('home');
+}
+
+// ===== OPERACIJE =====
+function initOperations() {
+  DB = loadDB();
+  STATE.opsTab = 'expense';
+  document.querySelectorAll('#screen-operations .tabs .tab').forEach((b, i) => {
+    b.classList.toggle('active', i === 0);
+  });
+  document.getElementById('ops-period-label').textContent = 'Sve transakcije';
+  renderOpsList();
 }
 
 function switchOpsTab(tab, btn) {
@@ -158,293 +466,41 @@ function switchOpsTab(tab, btn) {
   renderOpsList();
 }
 
-// ===== PERIOD =====
-function switchPeriod(p, btn) {
-  STATE.period = p;
-  STATE.periodOffset = 0;
-  document.querySelectorAll('#screen-home .period-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  updatePeriodLabel();
-  renderCategoryList();
-  drawDonut();
-}
-
-function prevPeriod() { STATE.periodOffset--; updatePeriodLabel(); renderCategoryList(); drawDonut(); }
-function nextPeriod() {
-  if (STATE.periodOffset < 0) { STATE.periodOffset++; updatePeriodLabel(); renderCategoryList(); drawDonut(); }
-}
-
-function switchOpsPeriod(p, btn) {
-  STATE.opsPeriod = p;
-  STATE.opsPeriodOffset = 0;
-  document.querySelectorAll('#screen-operations .period-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderOpsList();
-}
-function prevOpsPeriod() { STATE.opsPeriodOffset--; updateOpsLabel(); renderOpsList(); }
-function nextOpsPeriod() { if(STATE.opsPeriodOffset < 0){ STATE.opsPeriodOffset++; updateOpsLabel(); renderOpsList(); } }
-
-function updatePeriodLabel() {
-  const now = new Date();
-  const offset = STATE.periodOffset;
-  let label = '';
-  const fmt = (d) => d.toLocaleDateString('sr-RS', { day: 'numeric', month: 'long' });
-  if (STATE.period === 'day') {
-    const d = new Date(now); d.setDate(d.getDate() + offset);
-    label = offset === 0 ? 'Danas, ' + fmt(d) : fmt(d);
-  } else if (STATE.period === 'week') {
-    const start = new Date(now); start.setDate(start.getDate() - start.getDay() + 1 + offset * 7);
-    const end = new Date(start); end.setDate(end.getDate() + 6);
-    label = fmt(start) + ' – ' + fmt(end);
-  } else if (STATE.period === 'month') {
-    const d = new Date(now.getFullYear(), now.getMonth() + offset, 1);
-    label = d.toLocaleDateString('sr-RS', { month: 'long', year: 'numeric' });
-  } else if (STATE.period === 'year') {
-    label = (now.getFullYear() + offset).toString();
-  } else { label = 'Prilagođeno'; }
-  document.getElementById('period-label').textContent = label;
-  document.getElementById('next-period-btn').disabled = offset >= 0;
-}
-
-function updateOpsLabel() {
-  document.getElementById('ops-period-label').textContent = 'Nedavni periodi';
-}
-
-// ===== HOME =====
-function initHome() {
-  DB = load();
-  STATE.balance = DB.balance;
-  document.getElementById('balance-display').textContent = formatMoney(STATE.balance, STATE.baseCurrency);
-  updatePeriodLabel();
-  renderCategoryList();
-  drawDonut();
-}
-
-function getCatsForTab(tab) {
-  return DB.categories.filter(c => c.type === tab);
-}
-
-function getTxForPeriod(tab) {
-  return DB.transactions.filter(t => t.type === tab);
-}
-
-function renderCategoryList() {
-  const el = document.getElementById('categories-list');
-  const cats = getCatsForTab(STATE.mainTab);
-  const txList = getTxForPeriod(STATE.mainTab);
-  const total = txList.reduce((a, t) => a + t.amount, 0) || 1;
-
-  let html = '';
-  cats.forEach(cat => {
-    const catTx = txList.filter(t => t.catId === cat.id);
-    const sum = catTx.reduce((a, t) => a + t.amount, 0);
-    if (sum === 0) return;
-    const pct = Math.round(sum / total * 100);
-    const sym = CURRENCY_SYMBOLS[STATE.baseCurrency] || '$';
-    html += `<div class="cat-item" onclick="filterByCategory(${cat.id})">
-      <div class="cat-icon-circle" style="background:${cat.color}20;color:${cat.color}">
-        <span style="font-size:20px">${cat.icon}</span>
-      </div>
-      <span class="cat-name">${cat.name}</span>
-      <span class="cat-pct">${pct}%</span>
-      <span class="cat-amount">${formatMoney(sum, STATE.baseCurrency)}</span>
-    </div>`;
-  });
-  el.innerHTML = html || '<div style="text-align:center;color:var(--text-muted);padding:40px;font-size:14px">Nema transakcija</div>';
-}
-
-function drawDonut() {
-  const canvas = document.getElementById('donut-chart');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const cats = getCatsForTab(STATE.mainTab);
-  const txList = getTxForPeriod(STATE.mainTab);
-  const data = cats.map(cat => ({
-    val: txList.filter(t => t.catId === cat.id).reduce((a,t)=>a+t.amount,0),
-    color: cat.color,
-  })).filter(d => d.val > 0);
-
-  const total = data.reduce((a, d) => a + d.val, 0);
-  const cx = 110, cy = 110, r = 90, inner = 60;
-  ctx.clearRect(0, 0, 220, 220);
-
-  if (total === 0) {
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2);
-    ctx.strokeStyle = '#e0e8e2'; ctx.lineWidth = 30; ctx.stroke();
-    document.getElementById('donut-total').textContent = '0 ' + (CURRENCY_SYMBOLS[STATE.baseCurrency]||'$');
-    return;
-  }
-
-  let startAngle = -Math.PI / 2;
-  const gap = 0.03;
-  data.forEach(d => {
-    const slice = (d.val / total) * (Math.PI * 2 - gap * data.length);
-    ctx.beginPath();
-    ctx.moveTo(cx + (inner+1) * Math.cos(startAngle + gap/2), cy + (inner+1) * Math.sin(startAngle + gap/2));
-    ctx.arc(cx, cy, r, startAngle + gap/2, startAngle + slice + gap/2);
-    ctx.arc(cx, cy, inner, startAngle + slice + gap/2, startAngle + gap/2, true);
-    ctx.closePath();
-    ctx.fillStyle = d.color;
-    ctx.fill();
-    startAngle += slice + gap;
-  });
-
-  document.getElementById('donut-total').textContent = formatMoney(total, STATE.baseCurrency);
-}
-
-function formatMoney(amount, currency) {
-  const sym = CURRENCY_SYMBOLS[currency] || currency || '$';
-  const formatted = Math.round(amount).toLocaleString('sr-RS');
-  return formatted + ' ' + sym;
-}
-
-function editBalance() {
-  const val = prompt('Unesite novi balans:', STATE.balance);
-  if (val && !isNaN(parseFloat(val))) {
-    DB.balance = parseFloat(val);
-    save(DB);
-    initHome();
-  }
-}
-
-function filterByCategory(id) {
-  navigate('operations');
-}
-
-// ===== ADD TRANSACTION =====
-function initAddTx() {
-  STATE.selectedCategoryId = null;
-  document.getElementById('tx-amount').value = '';
-  document.getElementById('tx-converted').textContent = '0.00';
-  document.getElementById('tx-comment').value = '';
-  setTxDate(new Date());
-  renderTxCatGrid();
-}
-
-function renderTxCatGrid() {
-  const el = document.getElementById('tx-cat-grid');
-  const cats = DB.categories.filter(c => c.type === STATE.txTab);
-  let html = cats.map(cat => `
-    <div class="cat-grid-item ${STATE.selectedCategoryId === cat.id ? 'selected':''}" onclick="selectTxCat(${cat.id})">
-      <div class="cgi-circle" style="background:${cat.color}">
-        <span>${cat.icon}</span>
-      </div>
-      <span>${cat.name}</span>
-    </div>
-  `).join('');
-  // Add "More" button
-  html += `<div class="cat-grid-item" onclick="navigate('categories')">
-    <div class="cgi-circle"><span>➕</span></div>
-    <span>Više</span>
-  </div>`;
-  el.innerHTML = html;
-}
-
-function selectTxCat(id) {
-  STATE.selectedCategoryId = id;
-  renderTxCatGrid();
-}
-
-function setTxDate(d) {
-  const label = d.toLocaleDateString('sr-RS', { year: 'numeric', month: 'long', day: 'numeric' });
-  document.getElementById('tx-date-display').textContent = label;
-  document.getElementById('tx-date-display').dataset.date = d.toISOString().split('T')[0];
-}
-
-function pickDate() {
-  const input = document.createElement('input');
-  input.type = 'date';
-  input.value = document.getElementById('tx-date-display').dataset.date;
-  input.style.opacity = 0;
-  input.style.position = 'fixed';
-  document.body.appendChild(input);
-  input.focus(); input.click();
-  input.addEventListener('change', () => {
-    if (input.value) setTxDate(new Date(input.value + 'T12:00:00'));
-    document.body.removeChild(input);
-  });
-  setTimeout(() => { if(document.body.contains(input)) document.body.removeChild(input); }, 5000);
-}
-
-function convertAmount() {
-  const val = parseFloat(document.getElementById('tx-amount').value) || 0;
-  // simple mock conversion rates
-  const rates = { USD:1, EUR:0.88, GBP:0.76, RSD:108, JPY:150 };
-  const from = STATE.baseCurrency;
-  const to = from === 'USD' ? 'EUR' : 'USD';
-  const converted = (val / (rates[from]||1)) * (rates[to]||1);
-  document.getElementById('tx-converted').textContent = converted.toFixed(2);
-  document.getElementById('tx-currency').textContent = from;
-  document.getElementById('tx-converted-currency').textContent = CURRENCY_SYMBOLS[to] || to;
-}
-
-function addTransaction() {
-  const amount = parseFloat(document.getElementById('tx-amount').value);
-  if (!amount || amount <= 0) { alert('Unesite iznos!'); return; }
-  if (!STATE.selectedCategoryId) { alert('Izaberite kategoriju!'); return; }
-  const note = document.getElementById('tx-comment').value;
-  const date = document.getElementById('tx-date-display').dataset.date;
-  const newTx = {
-    id: Date.now(),
-    catId: STATE.selectedCategoryId,
-    amount,
-    currency: STATE.baseCurrency,
-    note,
-    date: date || new Date().toISOString().split('T')[0],
-    type: STATE.txTab,
-  };
-  DB.transactions.push(newTx);
-  if (STATE.txTab === 'expense') DB.balance -= amount;
-  else DB.balance += amount;
-  save(DB);
-  navigate('home');
-}
-
-// ===== OPERATIONS =====
-function initOperations() {
-  DB = load();
-  updateOpsLabel();
-  renderOpsList();
-}
-
 function renderOpsList() {
-  const el = document.getElementById('ops-list');
-  const txList = DB.transactions.filter(t => t.type === STATE.opsTab)
+  const el     = document.getElementById('ops-list');
+  const txList = DB.transactions
+    .filter(t => t.type === STATE.opsTab)
     .sort((a, b) => b.date.localeCompare(a.date));
 
-  if (txList.length === 0) {
+  const total = txList.reduce((a, t) => a + t.amount, 0);
+  document.getElementById('ops-total').textContent = 'Ukupno: ' + fmt(total, STATE.baseCurrency);
+
+  if (!txList.length) {
     el.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px;font-size:14px">Nema transakcija</div>';
-    document.getElementById('ops-total').textContent = 'Ukupno: 0 ' + (CURRENCY_SYMBOLS[STATE.baseCurrency]||'$');
     return;
   }
 
-  const total = txList.reduce((a, t) => a + t.amount, 0);
-  document.getElementById('ops-total').textContent = 'Ukupno: ' + formatMoney(total, STATE.baseCurrency);
-
   const byDate = {};
-  txList.forEach(t => {
-    if (!byDate[t.date]) byDate[t.date] = [];
-    byDate[t.date].push(t);
-  });
+  txList.forEach(t => { (byDate[t.date] = byDate[t.date] || []).push(t); });
 
   let html = '';
-  Object.keys(byDate).sort((a,b) => b.localeCompare(a)).forEach(date => {
+  Object.keys(byDate).sort((a, b) => b.localeCompare(a)).forEach(date => {
     const d = new Date(date + 'T12:00:00');
-    const label = d.toLocaleDateString('sr-RS', { day: 'numeric', month: 'long', year: 'numeric' });
-    html += `<div class="ops-date-group">${label}</div>`;
+    html += `<div class="ops-date-group">${d.toLocaleDateString('sr-RS', { day:'numeric', month:'long', year:'numeric' })}</div>`;
     byDate[date].forEach(tx => {
-      const cat = DB.categories.find(c => c.id === tx.catId) || { name: 'Ostalo', icon: '❓', color: '#95a5a6' };
-      const sym = CURRENCY_SYMBOLS[tx.currency] || tx.currency;
-      html += `<div class="ops-tx-item" onclick="deleteTx(${tx.id})">
-        <div class="cat-icon-circle" style="background:${cat.color}20;color:${cat.color};width:40px;height:40px">
-          <span style="font-size:18px">${cat.icon}</span>
-        </div>
-        <div class="ops-tx-info">
-          <div class="ops-tx-name">${cat.name}</div>
-          ${tx.note ? `<div class="ops-tx-note">${tx.note}</div>` : ''}
-        </div>
-        <div class="ops-tx-amount ${tx.type === 'income' ? 'income':''}">${tx.amount} ${sym}</div>
-      </div>`;
+      const cat = DB.categories.find(c => c.id === tx.catId) || { name:'Ostalo', icon:'❓', color:'#95a5a6' };
+      const sym = CURRENCY_SYMBOLS[tx.currency] || tx.currency || '$';
+      html += `
+        <div class="ops-tx-item" onclick="deleteTx(${tx.id})">
+          <div class="cat-icon-circle" style="background:${cat.color}20;color:${cat.color};width:40px;height:40px">
+            <span style="font-size:18px">${cat.icon}</span>
+          </div>
+          <div class="ops-tx-info">
+            <div class="ops-tx-name">${cat.name}</div>
+            ${tx.note ? `<div class="ops-tx-note">${tx.note}</div>` : ''}
+          </div>
+          <div class="ops-tx-amount ${tx.type === 'income' ? 'income' : ''}">${tx.amount} ${sym}</div>
+        </div>`;
     });
   });
   el.innerHTML = html;
@@ -453,185 +509,180 @@ function renderOpsList() {
 function deleteTx(id) {
   if (!confirm('Obrisati ovu transakciju?')) return;
   const tx = DB.transactions.find(t => t.id === id);
-  if (tx) {
-    if (tx.type === 'expense') DB.balance += tx.amount;
-    else DB.balance -= tx.amount;
-    DB.transactions = DB.transactions.filter(t => t.id !== id);
-    save(DB);
-    renderOpsList();
-  }
+  if (!tx) return;
+  DB.balance += tx.type === 'income' ? -tx.amount : tx.amount;
+  DB.transactions = DB.transactions.filter(t => t.id !== id);
+  saveDB();
+  renderOpsList();
 }
 
-// ===== CATEGORY SCREEN =====
+// ===== KATEGORIJE =====
 function initCategoryScreen() {
-  DB = load();
-  const el = document.getElementById('cat-list-screen');
+  DB = loadDB();
+  const el      = document.getElementById('cat-list-screen');
   const expCats = DB.categories.filter(c => c.type === 'expense');
   const incCats = DB.categories.filter(c => c.type === 'income');
-  let html = `<div class="cat-type-header">TROŠKOVI</div>`;
-  expCats.forEach(cat => {
-    html += `<div class="cat-item">
+
+  const renderCat = cat => `
+    <div class="cat-item">
       <div class="cat-icon-circle" style="background:${cat.color}20;color:${cat.color}">
         <span style="font-size:20px">${cat.icon}</span>
       </div>
       <span class="cat-name">${cat.name}</span>
-      <button style="background:none;border:none;cursor:pointer;color:#e74c3c;font-size:20px" onclick="deleteCat(${cat.id})">×</button>
+      <button style="background:none;border:none;cursor:pointer;color:#e74c3c;font-size:22px;padding:4px 8px"
+              onclick="deleteCat(${cat.id})">×</button>
     </div>`;
-  });
-  html += `<div class="cat-type-header">PRIHODI</div>`;
-  incCats.forEach(cat => {
-    html += `<div class="cat-item">
-      <div class="cat-icon-circle" style="background:${cat.color}20;color:${cat.color}">
-        <span style="font-size:20px">${cat.icon}</span>
-      </div>
-      <span class="cat-name">${cat.name}</span>
-      <button style="background:none;border:none;cursor:pointer;color:#e74c3c;font-size:20px" onclick="deleteCat(${cat.id})">×</button>
-    </div>`;
-  });
-  el.innerHTML = html;
+
+  el.innerHTML =
+    `<div class="cat-type-header">TROSKOVI</div>` + expCats.map(renderCat).join('') +
+    `<div class="cat-type-header">PRIHODI</div>`  + incCats.map(renderCat).join('');
 }
 
 function deleteCat(id) {
   if (!confirm('Obrisati kategoriju?')) return;
   DB.categories = DB.categories.filter(c => c.id !== id);
-  save(DB);
+  saveDB();
   initCategoryScreen();
 }
 
-// ===== NEW CATEGORY SCREEN =====
-function initNewCategoryScreen() {
-  STATE.selectedIcon = '🛒';
-  STATE.selectedColor = '#3a7d5a';
+// ===== NOVA KATEGORIJA =====
+function initNewCatScreen() {
+  STATE.selectedIcon  = '🛒';
+  STATE.selectedColor = '#4a90d9';
+  const nameEl = document.getElementById('new-cat-name');
+  if (nameEl) nameEl.value = '';
+  const radio = document.querySelector('input[name="cat-type"][value="expense"]');
+  if (radio) radio.checked = true;
+  updateNewCatPreview();
   renderIconGrid();
   renderColorRow();
-  updateNewCatPreview();
+}
+
+function updateNewCatPreview() {
+  const prev = document.getElementById('new-cat-preview');
+  const icon = document.getElementById('new-cat-icon-preview');
+  if (prev) prev.style.background = STATE.selectedColor;
+  if (icon) icon.textContent      = STATE.selectedIcon;
 }
 
 function renderIconGrid() {
   const el = document.getElementById('icon-grid');
+  if (!el) return;
   el.innerHTML = ICON_LIST.map(ic => `
-    <div class="icon-cell ${STATE.selectedIcon === ic ? 'selected':''}" onclick="selectIcon('${ic}')">
-      ${ic}
-    </div>
+    <div class="icon-cell ${STATE.selectedIcon === ic ? 'selected' : ''}"
+         onclick="selectIcon('${ic}')">${ic}</div>
   `).join('');
 }
 
 function renderColorRow() {
   const el = document.getElementById('color-row');
+  if (!el) return;
   let html = `<div class="color-add" onclick="addCustomColor()">+</div>`;
   html += COLORS.map(c => `
-    <div class="color-dot ${STATE.selectedColor === c ? 'selected':''}"
-      style="background:${c}" onclick="selectColor('${c}')">
-      ${STATE.selectedColor === c ? '✓' : ''}
-    </div>
+    <div class="color-dot ${STATE.selectedColor === c ? 'selected' : ''}"
+         style="background:${c}" onclick="selectColor('${c}')">${STATE.selectedColor === c ? '&#10003;' : ''}</div>
   `).join('');
   el.innerHTML = html;
 }
 
 function selectIcon(ic) {
   STATE.selectedIcon = ic;
-  document.getElementById('new-cat-icon-preview').textContent = ic;
+  updateNewCatPreview();
   renderIconGrid();
 }
 
 function selectColor(c) {
   STATE.selectedColor = c;
-  document.getElementById('new-cat-preview').style.background = c;
+  updateNewCatPreview();
   renderColorRow();
 }
 
 function addCustomColor() {
-  const c = prompt('Unesite hex boju (npr. #ff5733):');
-  if (c && /^#[0-9a-fA-F]{6}$/.test(c)) {
-    COLORS.push(c); selectColor(c);
-  }
-}
-
-function updateNewCatPreview() {
-  document.getElementById('new-cat-preview').style.background = STATE.selectedColor;
-  document.getElementById('new-cat-icon-preview').textContent = STATE.selectedIcon;
+  const c = prompt('Hex boja (npr. #ff5733):');
+  if (c && /^#[0-9a-fA-F]{6}$/.test(c)) { COLORS.push(c); selectColor(c); }
 }
 
 function saveCategory() {
-  const name = document.getElementById('new-cat-name').value.trim();
+  const nameEl = document.getElementById('new-cat-name');
+  const name   = nameEl ? nameEl.value.trim() : '';
   if (!name) { alert('Unesite naziv!'); return; }
-  const type = document.querySelector('input[name="cat-type"]:checked').value;
-  const newCat = {
-    id: Date.now(),
-    name, icon: STATE.selectedIcon, color: STATE.selectedColor, type
-  };
-  DB.categories.push(newCat);
-  save(DB);
+  const radio = document.querySelector('input[name="cat-type"]:checked');
+  const type  = radio ? radio.value : 'expense'; // 'expense' ili 'income'
+  DB.categories.push({ id: Date.now(), name, icon: STATE.selectedIcon, color: STATE.selectedColor, type });
+  saveDB();
   navigate('categories');
 }
 
-// ===== ACCOUNTS =====
+// ===== RACUNI =====
 function initAccounts() {
-  const accounts = JSON.parse(localStorage.getItem('kasica_accounts') || 'null') || [
-    { id: 1, name: 'Gotovina', balance: 2845, currency: 'USD', icon: '💵' },
-    { id: 2, name: 'Banka', balance: 5200, currency: 'RSD', icon: '🏦' },
-  ];
+  let accounts = [];
+  const raw = lsGet('k_accounts');
+  if (raw) { try { accounts = JSON.parse(raw) || []; } catch(e) {} }
+  if (!accounts.length) {
+    accounts = [
+      { id: 1, name: 'Gotovina', balance: 2845, currency: 'USD', icon: '💵' },
+      { id: 2, name: 'Banka',    balance: 5200, currency: 'RSD', icon: '🏦' },
+    ];
+  }
   const el = document.getElementById('accounts-content');
+  if (!el) return;
   el.innerHTML = accounts.map(a => `
     <div class="account-card">
       <div>
         <div style="font-size:28px;margin-bottom:4px">${a.icon}</div>
         <div class="account-name">${a.name}</div>
       </div>
-      <div class="account-balance">${formatMoney(a.balance, a.currency)}</div>
-    </div>
-  `).join('');
+      <div class="account-balance">${fmt(a.balance, a.currency)}</div>
+    </div>`).join('');
 }
 
 function addAccount() {
-  const name = prompt('Naziv računa:');
+  const name = prompt('Naziv racuna:');
   if (!name) return;
-  const balance = parseFloat(prompt('Početni balans:', '0') || '0');
-  const accounts = JSON.parse(localStorage.getItem('kasica_accounts') || '[]');
+  const balance = parseFloat(prompt('Pocetni balans:', '0') || '0') || 0;
+  const raw = lsGet('k_accounts');
+  const accounts = raw ? (JSON.parse(raw) || []) : [];
   accounts.push({ id: Date.now(), name, balance, currency: STATE.baseCurrency, icon: '💰' });
-  localStorage.setItem('kasica_accounts', JSON.stringify(accounts));
+  lsSet('k_accounts', JSON.stringify(accounts));
   initAccounts();
 }
 
-// ===== CHARTS =====
+// ===== GRAFIKONI =====
 function initCharts() {
-  setTimeout(() => {
-    drawBarChart();
-    drawPieChart();
-  }, 100);
+  DB = loadDB();
+  setTimeout(() => { drawBarChart(); drawPieChart(); }, 80);
 }
 
 function drawBarChart() {
   const canvas = document.getElementById('bar-chart');
   if (!canvas) return;
-  const ctx = canvas.getContext('2d');
+  const ctx    = canvas.getContext('2d');
   const months = ['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Avg','Sep','Okt','Nov','Dec'];
-  const data = [800,1200,950,1400,1100,1600,1030,0,0,0,0,0];
-  const maxVal = Math.max(...data.filter(d=>d>0)) || 1;
-  const w = canvas.width, h = canvas.height;
-  const barW = 18, gap = (w - 32) / 12;
-  ctx.clearRect(0, 0, w, h);
+  const curM   = new Date().getMonth();
+
+  const data = months.map((_, i) =>
+    DB.transactions
+      .filter(t => t.type === 'expense' && new Date(t.date + 'T12:00:00').getMonth() === i)
+      .reduce((a, t) => a + t.amount, 0)
+  );
+
+  const maxVal = Math.max(...data, 1);
+  const W = canvas.width, H = canvas.height;
+  const barW = 16, gap = (W - 32) / 12;
+  ctx.clearRect(0, 0, W, H);
+
   data.forEach((val, i) => {
-    if (val === 0) return;
-    const x = 16 + i * gap + gap/2 - barW/2;
-    const barH = (val / maxVal) * (h - 40);
-    const y = h - 25 - barH;
-    ctx.fillStyle = i === 6 ? '#3a7d5a' : '#c5ddd1';
-    const radius = 5;
+    const x    = 16 + i * gap + gap / 2 - barW / 2;
+    const barH = Math.max(val > 0 ? 4 : 0, (val / maxVal) * (H - 40));
+    const y    = H - 25 - barH;
+    ctx.fillStyle = i === curM ? '#3a7d5a' : '#c5ddd1';
     ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.lineTo(x + barW - radius, y);
-    ctx.quadraticCurveTo(x + barW, y, x + barW, y + radius);
-    ctx.lineTo(x + barW, y + barH);
-    ctx.lineTo(x, y + barH);
-    ctx.lineTo(x, y + radius);
-    ctx.quadraticCurveTo(x, y, x + radius, y);
-    ctx.closePath();
+    ctx.rect(x, y, barW, barH);
     ctx.fill();
     ctx.fillStyle = '#7a9080';
-    ctx.font = '10px Nunito';
+    ctx.font = '9px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(months[i], x + barW/2, h - 8);
+    ctx.fillText(months[i], x + barW / 2, H - 8);
   });
 }
 
@@ -639,56 +690,71 @@ function drawPieChart() {
   const canvas = document.getElementById('pie-chart');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
-  const cats = DB.categories.filter(c => c.type === 'expense').slice(0, 6);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const cats   = DB.categories.filter(c => c.type === 'expense');
   const txList = DB.transactions.filter(t => t.type === 'expense');
-  const data = cats.map(cat => ({
-    val: txList.filter(t => t.catId === cat.id).reduce((a,t)=>a+t.amount,0),
-    color: cat.color, name: cat.name,
+  const data   = cats.map(cat => ({
+    val:   txList.filter(t => t.catId === cat.id).reduce((a, t) => a + t.amount, 0),
+    color: cat.color,
   })).filter(d => d.val > 0);
+
   const total = data.reduce((a, d) => a + d.val, 0);
-  if (total === 0) return;
-  const cx = 100, cy = 100, r = 80;
-  let startAngle = -Math.PI / 2;
+  if (!total) return;
+
+  let angle = -Math.PI / 2;
   data.forEach(d => {
     const slice = (d.val / total) * Math.PI * 2;
     ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, startAngle, startAngle + slice);
+    ctx.moveTo(100, 100);
+    ctx.arc(100, 100, 80, angle, angle + slice);
     ctx.closePath();
     ctx.fillStyle = d.color;
     ctx.fill();
-    startAngle += slice;
+    angle += slice;
   });
 }
 
-// ===== SETTINGS =====
+// ===== PODESAVANJA =====
 function initSettings() {
-  const theme = localStorage.getItem('kasica_theme') || 'light';
-  document.getElementById('theme-select').value = theme;
-  if (theme === 'dark') document.body.classList.add('dark');
-  document.getElementById('base-currency').value = STATE.baseCurrency;
+  const themeEl = document.getElementById('theme-select');
+  const currEl  = document.getElementById('base-currency');
+  if (themeEl) themeEl.value = lsGet('k_theme') || 'light';
+  if (currEl)  currEl.value  = STATE.baseCurrency;
 }
 
 function applyTheme() {
   const theme = document.getElementById('theme-select').value;
-  localStorage.setItem('kasica_theme', theme);
+  lsSet('k_theme', theme);
   document.body.classList.toggle('dark', theme === 'dark');
 }
 
 function saveSettings() {
-  STATE.baseCurrency = document.getElementById('base-currency').value;
+  const cur = document.getElementById('base-currency').value;
+  STATE.baseCurrency = cur;
+  lsSet('k_currency', cur);  // cuva se u localStorage
+  // odmah osvezi prikaz balansa
+  const balEl = document.getElementById('balance-display');
+  if (balEl) balEl.textContent = fmt(DB.balance, cur);
 }
 
 function clearData() {
-  if (confirm('Obrisati sve podatke? Ovo se ne može poništiti.')) {
-    localStorage.clear();
-    DB = load();
-    navigate('home');
-  }
+  if (!confirm('Obrisati SVE podatke? Ne moze se ponistiti.')) return;
+  ['k_cats','k_tx','k_balance','k_currency','k_theme','k_accounts'].forEach(k => {
+    try { localStorage.removeItem(k); } catch(e) {}
+  });
+  STATE.baseCurrency = 'USD';
+  DB = loadDB();
+  navigate('home');
 }
 
 function exportData() {
-  const blob = new Blob([JSON.stringify({ categories: DB.categories, transactions: DB.transactions }, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = 'kasica-export.json'; a.click();
+  const blob = new Blob(
+    [JSON.stringify({ categories: DB.categories, transactions: DB.transactions }, null, 2)],
+    { type: 'application/json' }
+  );
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'kasica-export.json';
+  a.click();
 }
