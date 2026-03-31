@@ -241,7 +241,7 @@
       <div class="section-label">Valuta</div>
       <select id="acc-currency" style="width:100%;border:none;border-bottom:1.5px solid var(--border);background:none;font-size:16px;font-family:'Nunito',sans-serif;padding:12px 0;outline:none;color:var(--text);margin-bottom:8px">
         <option value="USD">USD ($)</option>
-        <option value="EUR">EUR (€)</option>
+        <option value="EUR" selected>EUR (€)</option>
         <option value="RSD">RSD (din)</option>
         <option value="GBP">GBP (£)</option>
       </select>
@@ -291,7 +291,7 @@
         <input type="number" id="reg-amount" class="amount-input" placeholder="0" style="font-size:28px;width:120px">
         <select id="reg-currency" style="border:none;background:none;font-size:16px;font-family:'Nunito',sans-serif;color:var(--green);font-weight:700;outline:none">
           <option value="USD">USD</option>
-          <option value="EUR">EUR</option>
+          <option value="EUR" selected>EUR</option>
           <option value="RSD">RSD</option>
           <option value="GBP">GBP</option>
         </select>
@@ -372,7 +372,7 @@
           <span>Osnovna valuta</span>
           <select id="base-currency" onchange="saveSettings()">
             <option value="USD">USD ($)</option>
-            <option value="EUR">EUR (€)</option>
+            <option value="EUR" selected>EUR (€)</option>
             <option value="RSD">RSD (din)</option>
             <option value="GBP">GBP (£)</option>
           </select>

@@ -55,7 +55,23 @@ const STATE = {
   selectedCatId: null,
   selectedIcon:  '🛒',
   selectedColor: '#4a90d9',
-  baseCurrency:  'USD',
+  baseCurrency:  'EUR',
+};
+
+// Fiksna mapa — svaki ekran zna gde ide "nazad"
+const BACK_MAP = {
+  'add-transaction': 'home',
+  'operations':      'home',
+  'categories':      'home',
+  'new-category':    'categories',
+  'charts':          'home',
+  'accounts':        'home',
+  'new-account':     'accounts',
+  'regular':         'home',
+  'new-regular':     'regular',
+  'reminders':       'home',
+  'new-reminder':    'reminders',
+  'settings':        'home',
 };
 
 // ===== LOCALSTORAGE HELPERS =====
@@ -99,6 +115,7 @@ function loadDB() {
   // valuta — ucitava se u STATE
   const savedCur = lsGet('k_currency');
   if (savedCur && CURRENCY_SYMBOLS[savedCur]) STATE.baseCurrency = savedCur;
+  else STATE.baseCurrency = 'EUR';
 
   // tema
   const savedTheme = lsGet('k_theme');
@@ -150,7 +167,8 @@ function navigate(screen) {
 }
 
 function goBack() {
-  navigate(STATE.prevScreen || 'home');
+  const dest = BACK_MAP[STATE.currentScreen] || 'home';
+  navigate(dest);
 }
 
 // ===== SIDEBAR =====
