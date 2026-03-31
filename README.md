@@ -29,12 +29,12 @@
 ### Online (GitHub Pages)
 Aplikacija je dostupna na:
 ```
-https://<tvoje-korisnicko-ime>.github.io/kasica/
+https://milan12t.github.io/kasica/
 ```
 
 ### Lokalno
 ```bash
-git clone https://github.com/<tvoje-korisnicko-ime>/kasica.git
+git clone https://github.com/milan12t/kasica.git
 cd kasica
 # Otvori index.html u browseru ili pokreni lokalni server:
 npx serve .
